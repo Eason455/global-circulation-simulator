@@ -6,8 +6,13 @@
 架构: app.py (页面编排) -> ui/ (侧边栏/标题/面板/考试) -> modules/ (可视化) -> utils/ (物理模型)
 
 运行: streamlit run app.py
+
+动画方案: st.empty() 占位符 + while 循环,
+每帧更新图表, 自动推进月份, 不受 st.rerun() 丢弃输出的限制.
 """
 
+import time
+import sys
 import streamlit as st
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -35,14 +40,38 @@ st.set_page_config(
 )
 
 # ============================================================
-# 加载 CSS
+# CSS 加载 — 多重回退策略
 # ============================================================
 def load_css():
-    """从 assets/style.css 加载 Apple Design System 样式"""
-    css_path = Path(__file__).parent / "assets" / "style.css"
-    if css_path.exists():
-        with open(css_path, "r", encoding="utf-8") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    """加载 Apple Design System 样式, 多重回退确保文件找到."""
+    css_content = None
+
+    # 策略1: __file__ 相对路径
+    try:
+        css_path = Path(__file__).resolve().parent / "assets" / "style.css"
+        if css_path.exists():
+            css_content = css_path.read_text(encoding="utf-8")
+    except Exception:
+        pass
+
+    # 策略2: sys.argv[0] 相对路径
+    if css_content is None:
+        try:
+            script_dir = Path(sys.argv[0]).resolve().parent
+            css_path = script_dir / "assets" / "style.css"
+            if css_path.exists():
+                css_content = css_path.read_text(encoding="utf-8")
+        except Exception:
+            pass
+
+    # 策略3: 硬编码绝对路径
+    if css_content is None:
+        hard_path = Path(r"Z:\global-circulation-simulator\assets\style.css")
+        if hard_path.exists():
+            css_content = hard_path.read_text(encoding="utf-8")
+
+    if css_content:
+        st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
     else:
         st.warning("style.css not found — UI may not render correctly.")
 
@@ -62,7 +91,7 @@ from ui.exam import render_exam_mode
 def init_session_state():
     """初始化 Streamlit 会话状态变量"""
     defaults = {
-        "month": 7.0,             # 当前月份, 普通变量 (非 widget key)
+        "month": 7.0,
         "anim_speed": "normal",
         "shift_amplitude": 10,
         "show_solar": True,
@@ -85,44 +114,51 @@ def init_session_state():
 init_session_state()
 
 # ============================================================
-# 动画循环
+# 动画循环 — 使用 st.empty() 占位符
 # ============================================================
-def handle_animation():
-    """自动推进月份 — 基于 URL query string 的动画循环.
-    不使用 st.rerun() (那会丢弃渲染输出).
-    每帧: 页面正常渲染 → JS 定时器修改 URL → 浏览器导航 → Streamlit 重跑.
+def run_animation():
     """
-    if not st.session_state.animating:
-        return
+    在 st.empty() 占位符中循环渲染可视化面板,
+    每帧推进月份, 实现流畅动画.
 
-    speeds = {"slow": 0.05, "normal": 0.12, "fast": 0.3}
-    delay_ms = {"slow": 800, "normal": 500, "fast": 200}
-    step = speeds.get(st.session_state.anim_speed, 0.12)
-    dms = delay_ms.get(st.session_state.anim_speed, 500)
+    这是 Streamlit 中动画的唯一可靠方案:
+    - 不使用 st.rerun() (那会丢弃渲染输出)
+    - 不使用 JS URL 导航 (浏览器闪烁, 速度不可控)
+    - while 循环内直接更新占位符, 浏览器实时接收帧
 
-    # 从 URL 读取动画月份 (由上一帧的 JS 写入)
-    qp_month = st.query_params.get("_m")
-    if qp_month:
-        try:
-            st.session_state.month = float(qp_month)
-        except ValueError:
-            pass
+    限制: 循环期间侧边栏控件不响应 (Streamlit 同步特性).
+    动画自动运行约 20 秒后停止, 或点击"停止"后等待当前帧结束.
+    """
+    speeds = {"slow": 0.05, "normal": 0.15, "fast": 0.35}
+    delays = {"slow": 0.6, "normal": 0.3, "fast": 0.1}
 
-    # 计算下一帧月份
-    new_month = st.session_state.month + step
-    if new_month > 13:
-        new_month -= 12
+    step = speeds.get(st.session_state.anim_speed, 0.15)
+    delay = delays.get(st.session_state.anim_speed, 0.3)
 
-    # 注入 JS: 页面加载后 dms 毫秒导航到下一帧
-    st.markdown(f"""
-    <script>
-    setTimeout(function() {{
-        var url = new URL(window.location);
-        url.searchParams.set('_m', '{new_month:.2f}');
-        window.location.assign(url.toString());
-    }}, {dms});
-    </script>
-    """, unsafe_allow_html=True)
+    # 最大帧数: 覆盖约 12 个月 (一次完整年循环)
+    max_frames = int(12 / step) + 5
+
+    ph = st.empty()
+
+    for frame in range(max_frames):
+        if not st.session_state.animating:
+            break
+
+        # 渲染当前帧到占位符
+        with ph.container():
+            render_main_visualizations()
+            render_knowledge_panel()
+
+        # 等前端渲染
+        time.sleep(delay)
+
+        # 推进月份
+        st.session_state.month += step
+        if st.session_state.month > 13:
+            st.session_state.month -= 12
+
+    # 动画结束
+    st.session_state.animating = False
 
 # ============================================================
 # 页脚
@@ -146,14 +182,15 @@ def main():
     render_sidebar()
     render_header()
 
-    if st.session_state.exam_active:
+    if st.session_state.animating:
+        run_animation()
+    elif st.session_state.exam_active:
         render_exam_mode()
     else:
         render_main_visualizations()
         render_knowledge_panel()
 
     render_footer()
-    handle_animation()
 
 if __name__ == "__main__":
     main()
