@@ -168,6 +168,12 @@ def _render_animating_month_display():
     </div>
     """, unsafe_allow_html=True)
 
-    # 月份进度条 (1月=0%, 12月=100%)
-    progress = (month - 1) / 11
-    st.progress(progress, text="全年进度")
+    # 月份进度条 — 使用 0.1~12.9 范围映射到 0~1
+    raw = (month - 1) / 11
+    if raw < 0.0:
+        progress = 0.0
+    elif raw > 1.0:
+        progress = 1.0
+    else:
+        progress = raw
+    st.progress(float(progress), text="全年进度")
