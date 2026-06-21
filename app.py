@@ -122,8 +122,8 @@ def render_footer():
 # ============================================================
 def main():
     render_sidebar()
-    handle_animation()
     render_header()
+    handle_animation()
 
     if st.session_state.exam_active:
         render_exam_mode()
