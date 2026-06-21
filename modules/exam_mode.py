@@ -33,10 +33,19 @@ class ExamQuestion:
 
 
 def generate_questions(n_questions: int = 4) -> List[ExamQuestion]:
-    """生成一组随机考试题."""
+    """生成一组随机考试题, 题型顺序随机打乱."""
     questions = []
+    type_pool = ["pressure", "wind", "monsoon", "rain"]
 
     for i in range(n_questions):
+        # 每个题型至少出现一次, 剩余随机抽取
+        if i < len(type_pool):
+            q_type = type_pool[i]
+        else:
+            q_type = random.choice(type_pool)
+        # 随机打乱顺序
+        random.shuffle(type_pool)
+
         month = random.uniform(0.5, 12.5)
         if month > 12:
             month -= 12
@@ -49,18 +58,15 @@ def generate_questions(n_questions: int = 4) -> List[ExamQuestion]:
         monsoon = get_monsoon_state(month)
         rain = get_rain_belt_position(month)
         season = get_season_name(month)
-        month_int = int(round(month))
-
-        q_type = ["pressure", "wind", "monsoon", "rain"][i % 4]
 
         if q_type == "pressure":
-            q = _gen_pressure_question(month_int, season, decl, pressure_belts)
+            q = _gen_pressure_question(month, season, decl, pressure_belts)
         elif q_type == "wind":
-            q = _gen_wind_question(month_int, season, wind_belts)
+            q = _gen_wind_question(month, season, wind_belts)
         elif q_type == "monsoon":
-            q = _gen_monsoon_question(month_int, season, monsoon)
+            q = _gen_monsoon_question(month, season, monsoon)
         else:
-            q = _gen_rain_question(month_int, season, rain)
+            q = _gen_rain_question(month, season, rain)
 
         questions.append(q)
 
@@ -69,29 +75,36 @@ def generate_questions(n_questions: int = 4) -> List[ExamQuestion]:
 
 def _gen_pressure_question(month, season, decl, belts) -> ExamQuestion:
     """生成气压带相关考题"""
+    from utils.physics import get_month_name
+    month_label = get_month_name(month)
     decl_str = f"{abs(decl):.1f}°{'N' if decl >= 0 else 'S'}"
     itcz = next((b for b in belts if b.name == "赤道低压带"), None)
-    correct_lat = "约5°N-5°S" if itcz is None else f"约{abs(itcz.base_lat):.0f}°附近"
+    if itcz:
+        belt_lat = abs(itcz.base_lat)
+        belt_hemi = "N" if itcz.base_lat >= 0 else "S"
+        correct_text = f"{belt_lat:.0f}°{belt_hemi} 附近"
+    else:
+        correct_text = "约5°N-5°S"
 
     return ExamQuestion(
-        id=f"p_{month}",
+        id=f"p_{month:.1f}",
         month=month,
         question_type="pressure",
         question_text=(
-            f"{month}月 ({season}), 太阳直射点位于 {decl_str}。"
+            f"{month_label} ({season}), 太阳直射点位于 {decl_str}。"
             f"此时赤道低压带 (ITCZ) 的主体位置在哪?"
         ),
         options=[
-            f"赤道附近 (0°)",
-            f"北半球 ({correct_lat}N 附近)" if decl > 0 else f"南半球 ({correct_lat}S 附近)",
-            f"南半球" if decl > 0 else f"北半球",
+            "赤道附近 (0°)",
+            f"北半球 {correct_text}" if decl > 0 else f"南半球 {correct_text}",
+            "南半球" if decl > 0 else "北半球",
             "不发生移动",
         ],
         correct_index=1,
         explanation=(
             f"太阳直射点位于 {decl_str}, "
             f"赤道低压带跟随太阳直射点向{'北' if decl > 0 else '南'}移动, "
-            f"大致位于 {correct_lat}。"
+            f"大致位于 {correct_text}。"
         ),
     )
 
@@ -109,7 +122,7 @@ def _gen_wind_question(month, season, wind_belts) -> ExamQuestion:
             month=month,
             question_type="wind",
             question_text=(
-                f"{month}月 ({season}), 北半球中纬度地区盛行什么风?"
+                f"{int(round(month))}月 ({season}), 北半球中纬度地区盛行什么风?"
             ),
             options=[
                 "东北信风",
@@ -121,7 +134,7 @@ def _gen_wind_question(month, season, wind_belts) -> ExamQuestion:
             explanation=(
                 f"北半球中纬度 ({nh_westerlies.lat_min:.0f}° ~ "
                 f"{nh_westerlies.lat_max:.0f}°) "
-                f"盛行西风带, 风向为西南风。"
+                f"盛行西风带, 风向为{nh_westerlies.direction_cn}风。"
             ),
         )
     else:
@@ -129,7 +142,7 @@ def _gen_wind_question(month, season, wind_belts) -> ExamQuestion:
             id=f"w_{month}",
             month=month,
             question_type="wind",
-            question_text=f"{month}月 ({season}), 北半球低纬度地区盛行什么风?",
+            question_text=f"{int(round(month))}月 ({season}), 北半球低纬度地区盛行什么风?",
             options=["东北信风", "东南信风", "盛行西风", "极地东风"],
             correct_index=0,
             explanation="北半球低纬度盛行东北信风, 受科里奥利力影响向右偏转。",
@@ -138,13 +151,15 @@ def _gen_wind_question(month, season, wind_belts) -> ExamQuestion:
 
 def _gen_monsoon_question(month, season, monsoon) -> ExamQuestion:
     """生成季风相关考题"""
+    from utils.physics import get_month_name
+    month_label = get_month_name(month)
     if monsoon["season"] == "summer":
         return ExamQuestion(
-            id=f"m_{month}",
+            id=f"m_{month:.1f}",
             month=month,
             question_type="monsoon",
             question_text=(
-                f"{month}月 ({season}), 东亚地区盛行什么季风? 风向如何?"
+                f"{month_label} ({season}), 东亚地区盛行什么季风? 风向如何?"
             ),
             options=[
                 "西北季风 (大陆→海洋)",
@@ -160,11 +175,11 @@ def _gen_monsoon_question(month, season, monsoon) -> ExamQuestion:
         )
     elif monsoon["season"] == "winter":
         return ExamQuestion(
-            id=f"m_{month}",
+            id=f"m_{month:.1f}",
             month=month,
             question_type="monsoon",
             question_text=(
-                f"{month}月 ({season}), 东亚地区盛行什么季风? 风向如何?"
+                f"{month_label} ({season}), 东亚地区盛行什么季风? 风向如何?"
             ),
             options=[
                 "西北季风 (大陆→海洋)",
@@ -180,10 +195,10 @@ def _gen_monsoon_question(month, season, monsoon) -> ExamQuestion:
         )
     else:
         return ExamQuestion(
-            id=f"m_{month}",
+            id=f"m_{month:.1f}",
             month=month,
             question_type="monsoon",
-            question_text=f"{month}月 ({season}), 东亚季风处于什么状态?",
+            question_text=f"{month_label} ({season}), 东亚季风处于什么状态?",
             options=[
                 "夏季风 (东南风)",
                 "冬季风 (西北风)",
@@ -197,6 +212,8 @@ def _gen_monsoon_question(month, season, monsoon) -> ExamQuestion:
 
 def _gen_rain_question(month, season, rain) -> ExamQuestion:
     """生成雨带相关考题"""
+    from utils.physics import get_month_name
+    month_label = get_month_name(month)
     lat = rain["lat_center"]
     lat_str = f"{abs(lat):.1f}°{'N' if lat >= 0 else 'S'}"
 
@@ -206,21 +223,21 @@ def _gen_rain_question(month, season, rain) -> ExamQuestion:
         anomaly = "正常"
 
     return ExamQuestion(
-        id=f"r_{month}",
+        id=f"r_{month:.1f}",
         month=month,
         question_type="rain",
         question_text=(
-            f"{month}月 ({season}), 全球主要雨带 (ITCZ降水带) 位置在哪?"
+            f"{month_label} ({season}), 全球主要雨带 (ITCZ降水带) 位置在哪?"
         ),
         options=[
-            f"赤道附近 (0° 附近)",
+            "赤道附近 (0° 附近)",
             f"北半球 {lat_str} 附近",
             f"南半球 {lat_str} 附近",
             "与气压带无关, 随机分布",
         ],
         correct_index=1 if lat >= 0 else 2,
         explanation=(
-            f"ITCZ 雨带跟随太阳直射点移动, {month}月雨带大致位于 {lat_str}, "
+            f"ITCZ 雨带跟随太阳直射点移动, {month_label}雨带大致位于 {lat_str}, "
             f"位置{anomaly}。"
         ),
     )
