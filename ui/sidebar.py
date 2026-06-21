@@ -25,9 +25,9 @@ def render_sidebar() -> None:
             "拖动选择月份",
             min_value=0.1,
             max_value=12.9,
-            value=st.session_state.month,
             step=0.1,
             format="%.1f",
+            key="month",
         )
 
         decl = get_solar_declination(month)
