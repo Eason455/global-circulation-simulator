@@ -54,66 +54,451 @@ from utils.physics import (
 # 页面配置
 # ============================================================
 st.set_page_config(
-    page_title="全球大气环流与东亚季风模拟器",
-    page_icon="🌍",
+    page_title="全球大气环流与东亚季风 | 交互模拟器",
+    page_icon="data:image/svg+xml," + "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230071e3'/%3E%3Ccircle cx='10' cy='12' r='3' fill='white' opacity='.9'/%3E%3Cpath d='M6 22 Q16 28 26 22' stroke='white' stroke-width='1.5' fill='none' opacity='.7'/%3E%3C/svg%3E",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# 自定义 CSS 主题 (学术简洁风格, 参考 NASA/国家地理)
+# ============================================================
+# Apple Design System + Glassmorphism CSS
+# ============================================================
 st.markdown("""
 <style>
-    /* 全局字体和颜色 */
-    .stApp {
-        background-color: #f8f9fa;
-    }
-    /* 标题 */
-    h1, h2, h3 {
-        color: #2d3436;
-        font-weight: 700;
-    }
-    /* 卡片容器 */
-    .stCard {
-        background: white;
-        border-radius: 8px;
-        padding: 1rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    /* 侧边栏 */
-    section[data-testid="stSidebar"] {
-        background-color: #2d3436;
-    }
-    section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] span {
-        color: #dfe6e9 !important;
-    }
-    /* 按钮 */
-    .stButton > button {
-        background-color: #0984e3;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-    }
-    /* 指标卡片 */
-    .metric-card {
-        background: linear-gradient(135deg, #2d3436, #636e72);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        text-align: center;
-    }
-    .metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-    }
-    .metric-label {
-        font-size: 0.85rem;
-        opacity: 0.8;
-    }
+/* ============================================================
+   DESIGN TOKENS — Apple Human Interface Guidelines
+   ============================================================ */
+:root {
+  --bg-primary: #f5f5f7;
+  --bg-secondary: #ffffff;
+  --bg-elevated: rgba(255,255,255,0.48);
+  --bg-glass: rgba(255,255,255,0.64);
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --success: #34c759;
+  --warning: #ff9f0a;
+  --danger: #ff3b30;
+  --border: rgba(60,60,67,0.12);
+  --border-subtle: rgba(60,60,67,0.07);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.10);
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --smooth: cubic-bezier(0.25, 0.1, 0, 1);
+  --spring: cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+/* ============================================================
+   GLOBAL BASE
+   ============================================================ */
+.stApp {
+  background: var(--bg-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle background texture */
+.stApp::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;
+  pointer-events: none; opacity: 0.025;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* Radial glow (subtle ambient light) */
+.stApp::after {
+  content: '';
+  position: fixed; top: -30%; left: -20%; width: 140%; height: 160%; z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 35%, rgba(0,113,227,0.03) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(120,120,128,0.02) 0%, transparent 50%);
+}
+
+/* Main content wrapper */
+.main .block-container {
+  position: relative; z-index: 1;
+  padding-top: 1.5rem;
+}
+
+/* ============================================================
+   SIDEBAR — Frosted Glass
+   ============================================================ */
+section[data-testid="stSidebar"] {
+  background: rgba(245,245,247,0.72) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border-right: 0.5px solid var(--border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+section[data-testid="stSidebar"] .block-container {
+  padding: 1.25rem 1rem;
+}
+
+section[data-testid="stSidebar"] h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+section[data-testid="stSidebar"] h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin: 1.25rem 0 0.5rem;
+}
+
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] span {
+  color: var(--text-primary) !important;
+  font-size: 14px;
+}
+
+section[data-testid="stSidebar"] hr {
+  border-color: var(--border);
+  margin: 1rem 0;
+}
+
+/* Sidebar metric boxes */
+section[data-testid="stSidebar"] div[data-testid="stMetric"] {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  border: 0.5px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+section[data-testid="stSidebar"] div[data-testid="stMetric"] label {
+  font-size: 11px !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stMetric"] div {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+/* ============================================================
+   GLASS CARDS
+   ============================================================ */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  transition: all 0.35s var(--smooth);
+  margin-bottom: 1rem;
+}
+
+.glass-card:hover {
+  box-shadow: var(--shadow-lg);
+  background: rgba(255,255,255,0.72);
+}
+
+/* ============================================================
+   BUTTONS — Apple Style
+   ============================================================ */
+.stButton > button {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+               "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  border-radius: var(--radius-xl);
+  padding: 10px 20px;
+  border: none;
+  transition: all 0.3s var(--smooth);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.stButton > button:active {
+  transform: scale(0.97);
+}
+
+/* Primary button */
+.stButton > button[kind="primary"],
+.stButton > button:has(svg) {
+  background: rgba(29,29,31,0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+}
+
+.stButton > button[kind="primary"]:hover,
+.stButton > button:has(svg):hover {
+  background: rgba(0,0,0,0.92);
+  box-shadow: var(--shadow-md);
+}
+
+/* Secondary button */
+.stButton > button[kind="secondary"] {
+  background: rgba(60,60,67,0.08);
+  color: var(--text-primary);
+}
+
+.stButton > button[kind="secondary"]:hover {
+  background: rgba(60,60,67,0.12);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   SLIDERS & RADIO — Refined
+   ============================================================ */
+div[data-testid="stSlider"] > div {
+  padding: 0 2px;
+}
+
+.stRadio > div {
+  gap: 6px;
+}
+
+.stRadio label {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.25s var(--smooth);
+  font-size: 13px !important;
+}
+
+.stRadio label:hover {
+  background: var(--bg-glass);
+  border-color: var(--accent);
+}
+
+/* ============================================================
+   CHECKBOXES — Clean
+   ============================================================ */
+.stCheckbox label {
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   EXPANDER — Knowledge Panel
+   ============================================================ */
+.streamlit-expanderHeader {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.streamlit-expanderHeader:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.streamlit-expanderContent {
+  background: rgba(255,255,255,0.4);
+  border-radius: 0 0 var(--radius) var(--radius);
+  border: 0.5px solid var(--border-subtle);
+  border-top: none;
+  padding: 1rem 1.5rem;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1 {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 0.15rem !important;
+}
+
+h2 {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+  color: var(--text-primary) !important;
+}
+
+h3 {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.2px !important;
+  color: var(--text-secondary) !important;
+}
+
+h4 {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.1px !important;
+  color: var(--text-primary) !important;
+}
+
+/* Caption */
+.caption-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: -0.1px;
+}
+
+/* ============================================================
+   STATUS BADGE — Apple-style pill
+   ============================================================ */
+.status-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  background: rgba(0,113,227,0.1);
+  color: var(--accent);
+}
+
+/* ============================================================
+   METRIC BOX — Dashboard
+   ============================================================ */
+.metric-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--border);
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: all 0.35s var(--smooth);
+}
+
+.metric-glass:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.metric-glass .value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.metric-glass .label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   EXAM CARDS
+   ============================================================ */
+.exam-correct {
+  background: rgba(52,199,89,0.08);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 8px 0;
+}
+
+.exam-wrong {
+  background: rgba(255,59,48,0.06);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 8px 0;
+}
+
+.exam-score {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  text-align: center;
+  border: 0.5px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.exam-score .score-num {
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ============================================================
+   SELECT BOX — Apple style
+   ============================================================ */
+.stSelectbox > div > div {
+  border-radius: var(--radius-sm) !important;
+  border: 0.5px solid var(--border) !important;
+  background: rgba(255,255,255,0.6) !important;
+}
+
+/* ============================================================
+   DIVIDER — Subtle
+   ============================================================ */
+hr {
+  border: none;
+  border-top: 0.5px solid var(--border);
+  margin: 0.5rem 0;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 4px;
+  background: rgba(60,60,67,0.04);
+  border-radius: var(--radius-xl);
+  padding: 3px;
+}
+
+.stTabs [data-baseweb="tab"] {
+  border-radius: var(--radius-xl);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+  background: white;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -152,69 +537,70 @@ init_session_state()
 # 侧边栏: 交互控制面板
 # ============================================================
 def render_sidebar() -> None:
-    """渲染侧边栏控制面板"""
+    """渲染侧边栏控制面板 — Apple 毛玻璃风格"""
     with st.sidebar:
-        st.title("🎛️ 控制面板")
+        st.markdown('<div style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:#1d1d1f;">Control Panel</div>', unsafe_allow_html=True)
+        st.caption("全球大气环流模拟器")
 
         # ---- 月份滑块 ----
-        st.markdown("### 📅 月份选择")
+        st.markdown("##### Month Selection")
         month = st.slider(
-            "拖动选择月份",
-            min_value=0.1,  # 1月上旬
-            max_value=12.9, # 12月下旬
+            "Drag to select month",
+            min_value=0.1,
+            max_value=12.9,
             value=st.session_state.month,
             step=0.1,
-            format="%.1f 月",
+            format="%.1f",
             key="month_slider",
         )
         st.session_state.month = month
 
-        # 当前月份信息
+        # 当前月份信息卡片
         decl = get_solar_declination(month)
-        decl_str = f"{abs(decl):.1f}°{'N' if decl >= 0 else 'S'}"
+        decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
         season = get_season_name(month)
         month_name = get_month_name(month)
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("月份", month_name)
+            st.metric("Month", month_name)
         with col2:
-            st.metric("北半球", season)
+            st.metric("Season", season)
         with col3:
-            st.metric("直射纬度", decl_str)
+            st.metric("Declination", decl_str)
 
         st.divider()
 
         # ---- 动画控制 ----
-        st.markdown("### ▶️ 动画控制")
+        st.markdown("##### Animation")
         anim_speed = st.select_slider(
-            "动画速度",
+            "Speed",
             options=["slow", "normal", "fast"],
             value=st.session_state.anim_speed,
-            format_func=lambda x: {"slow": "🐢 慢速", "normal": "▶️ 正常", "fast": "⚡ 快速"}[x],
+            format_func=lambda x: {"slow": "Slow", "normal": "Normal", "fast": "Fast"}[x],
             key="anim_speed_select",
         )
         st.session_state.anim_speed = anim_speed
 
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("▶ 播放动画", use_container_width=True):
+            if st.button("Play", use_container_width=True, type="primary"):
                 st.session_state.animating = True
                 st.rerun()
         with col_b:
-            if st.button("⏸ 停止", use_container_width=True):
+            if st.button("Stop", use_container_width=True):
                 st.session_state.animating = False
                 st.rerun()
 
         st.divider()
 
         # ---- 风带移动幅度 ----
-        st.markdown("### ↔️ 风带移动幅度")
+        st.markdown("##### Shift Amplitude")
         shift_amplitude = st.radio(
-            "气压带/风带季节移动幅度",
+            "Seasonal shift range of pressure/wind belts",
             options=[5, 10, 15],
             index=1,
-            format_func=lambda x: f"±{x}°",
+            format_func=lambda x: "±" + str(x) + "°",
             horizontal=True,
             key="shift_radio",
         )
@@ -223,27 +609,27 @@ def render_sidebar() -> None:
         st.divider()
 
         # ---- 显示开关 ----
-        st.markdown("### 👁️ 显示开关")
-        st.session_state.show_solar = st.checkbox("☀️ 太阳直射点", value=True)
-        st.session_state.show_circulation = st.checkbox("🔄 三圈环流", value=True)
-        st.session_state.show_wind = st.checkbox("💨 气压带/风带", value=True)
-        st.session_state.show_monsoon = st.checkbox("🌏 东亚季风", value=True)
-        st.session_state.show_rain = st.checkbox("🌧️ 雨带移动", value=True)
-        st.session_state.show_climate = st.checkbox("🌍 气候带联动", value=True)
+        st.markdown("##### Visibility")
+        st.session_state.show_solar = st.checkbox("Solar Declination", value=True)
+        st.session_state.show_circulation = st.checkbox("Three-Cell Circulation", value=True)
+        st.session_state.show_wind = st.checkbox("Pressure & Wind Belts", value=True)
+        st.session_state.show_monsoon = st.checkbox("East Asian Monsoon", value=True)
+        st.session_state.show_rain = st.checkbox("Rain Belt (ITCZ)", value=True)
+        st.session_state.show_climate = st.checkbox("Climate Zones", value=True)
 
         st.divider()
 
         # ---- 考试模式 ----
-        st.markdown("### 📝 考试模式")
+        st.markdown("##### Exam Mode")
         if not st.session_state.exam_active:
-            if st.button("🎯 开始考试", use_container_width=True):
+            if st.button("Start Exam", use_container_width=True, type="primary"):
                 st.session_state.exam_active = True
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.session_state.exam_submitted = False
                 st.rerun()
         else:
-            if st.button("🔙 退出考试", use_container_width=True):
+            if st.button("Exit Exam", use_container_width=True):
                 st.session_state.exam_active = False
                 st.session_state.exam_submitted = False
                 st.rerun()
@@ -251,20 +637,20 @@ def render_sidebar() -> None:
         st.divider()
 
         # ---- 图例说明 ----
-        st.markdown("### ℹ️ 图例与说明")
+        st.markdown("##### Legend")
         st.markdown("""
-        <div style="font-size:0.8rem; color:#b2bec3;">
-        <b>气压带标记:</b><br>
-        <span style="color:#00b894;">L</span> = 低压 (上升气流, 多云雨)<br>
-        <span style="color:#e17055;">H</span> = 高压 (下沉气流, 晴燥)<br><br>
-        <b>环流颜色:</b><br>
-        <span style="color:#d63031;">红色</span> = 上升气流<br>
-        <span style="color:#0984e3;">蓝色</span> = 下沉气流<br><br>
-        <b>气压带缩写:</b><br>
-        ITCZ = 赤道低压带<br>
-        STH = 副热带高压带<br>
-        SPL = 副极地低压带<br>
-        PHP = 极地高压带<br>
+        <div style="font-size:12px; color:#86868b; line-height:1.7;">
+        <b style="color:#1d1d1f;">Pressure Belts:</b><br>
+        <span style="color:#00b894;">L</span> = Low (rising, cloudy)<br>
+        <span style="color:#e17055;">H</span> = High (sinking, dry)<br><br>
+        <b style="color:#1d1d1f;">Circulation:</b><br>
+        <span style="color:#d63031;">Red</span> = Rising air<br>
+        <span style="color:#0984e3;">Blue</span> = Sinking air<br><br>
+        <b style="color:#1d1d1f;">Abbreviations:</b><br>
+        ITCZ = Equatorial Low<br>
+        STH = Subtropical High<br>
+        SPL = Subpolar Low<br>
+        PHP = Polar High
         </div>
         """, unsafe_allow_html=True)
 
@@ -293,33 +679,28 @@ def handle_animation():
 # 页面标题和状态栏
 # ============================================================
 def render_header():
-    """渲染页面标题和信息栏"""
+    """渲染页面标题和信息栏 — Apple 风格"""
     col_title, col_status = st.columns([3, 1])
 
     with col_title:
-        st.title("全球大气环流与东亚季风模拟器")
-        st.caption(
-            "Global Atmospheric Circulation & East Asian Monsoon Simulator | "
-            "高中地理教学可视化工具 | "
-            "参考: 人教版高中地理选择性必修1"
+        st.title("Global Atmospheric Circulation")
+        st.markdown(
+            '<span class="caption-text">East Asian Monsoon Simulator &middot; '
+            'Interactive Geography Education Tool &middot; '
+            'Based on High School Geography Curriculum</span>',
+            unsafe_allow_html=True,
         )
 
     with col_status:
         month = st.session_state.month
         decl = get_solar_declination(month)
         season = get_season_name(month)
+        decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
 
         st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, #0984e3, #074b8a);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.9rem;
-        ">
-            <div style="font-size:1.5rem; font-weight:bold;">{get_month_name(month)}</div>
-            <div>{season} | 直射 {abs(decl):.1f}°{'N' if decl >= 0 else 'S'}</div>
+        <div class="metric-glass">
+            <div class="value">{get_month_name(month)}</div>
+            <div class="label">{season} &middot; Decl. {decl_str}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -331,10 +712,9 @@ def render_main_visualizations():
     """渲染主可视化区域 (上排: 全球环流 + 季风, 下排: 气候带)"""
 
     # ---- 第一行: 太阳直射点 + 气压带风带 + 三圈环流 ----
-    st.markdown("---")
-    st.subheader("一、全球大气环流系统")
+    st.divider()
+    st.subheader("I. Global Atmospheric Circulation")
 
-    # 根据显示开关决定列数
     active_panels = []
     if st.session_state.show_solar:
         active_panels.append("solar")
@@ -349,14 +729,14 @@ def render_main_visualizations():
         for col, panel in zip(cols, active_panels):
             with col:
                 if panel == "solar":
-                    st.markdown("#### ☀️ 太阳直射点周年运动")
+                    st.markdown("#### Solar Declination")
                     fig, ax = plt.subplots(figsize=(5, 4.5))
                     plot_solar_declination(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
 
                 elif panel == "wind":
-                    st.markdown("#### 💨 气压带与风带分布")
+                    st.markdown("#### Pressure & Wind Belts")
                     fig, ax = plt.subplots(figsize=(5, 5.5))
                     plot_pressure_wind_belts(
                         ax,
@@ -367,7 +747,7 @@ def render_main_visualizations():
                     plt.close(fig)
 
                 elif panel == "circulation":
-                    st.markdown("#### 🔄 三圈环流")
+                    st.markdown("#### Three-Cell Circulation")
                     fig, ax = plt.subplots(figsize=(6, 4.5))
                     plot_three_cell_circulation(
                         ax,
@@ -377,11 +757,11 @@ def render_main_visualizations():
                     st.pyplot(fig)
                     plt.close(fig)
     else:
-        st.info("请在侧边栏开启至少一个显示选项以查看全球环流图。")
+        st.info("Enable at least one visibility option in the sidebar.")
 
     # ---- 第二行: 东亚季风 + 雨带移动 ----
-    st.markdown("---")
-    st.subheader("二、东亚季风与降水系统")
+    st.divider()
+    st.subheader("II. East Asian Monsoon & Precipitation")
 
     panels_row2 = []
     if st.session_state.show_monsoon:
@@ -395,40 +775,44 @@ def render_main_visualizations():
         for col, panel in zip(cols, panels_row2):
             with col:
                 if panel == "monsoon":
-                    st.markdown("#### 🌏 东亚季风形成模拟")
+                    st.markdown("#### East Asian Monsoon")
                     fig, ax = plt.subplots(figsize=(5.5, 5))
                     plot_east_asian_monsoon(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
 
                 elif panel == "rain":
-                    st.markdown("#### 🌧️ 全球降水带 (ITCZ) 移动")
+                    st.markdown("#### Rain Belt (ITCZ)")
                     fig, ax = plt.subplots(figsize=(6, 3))
                     plot_rain_belt(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
     else:
-        st.info("请在侧边栏开启至少一个显示选项以查看季风与降水图。")
+        st.info("Enable at least one visibility option in the sidebar.")
 
     # ---- 第三行: 气候带联动 ----
     if st.session_state.show_climate:
-        st.markdown("---")
-        st.subheader("三、全球气候带与气压带联动")
+        st.divider()
+        st.subheader("III. Climate Zones & Pressure Belts")
 
-        # 气候带选择器
         climate_names = [
+            "Tropical Rainforest", "Tropical Savanna", "Tropical Desert",
+            "Mediterranean", "Maritime Temperate", "Temperate Monsoon",
+            "Continental", "Subarctic", "Polar",
+        ]
+        climate_names_cn = [
             "热带雨林气候", "热带草原气候", "热带沙漠气候",
             "地中海气候", "温带海洋性气候", "温带季风气候",
             "温带大陆性气候", "亚寒带针叶林气候", "极地气候",
         ]
 
         highlight = st.selectbox(
-            "点击气候带查看详细信息 (或选择「无」查看全局)",
-            ["无"] + climate_names,
+            "Select a climate zone to view details (or choose 'None' to overview)",
+            ["None"] + climate_names_cn,
             key="climate_selector",
         )
         st.session_state.highlight_climate = (
-            None if highlight == "无" else highlight
+            None if highlight == "None" else highlight
         )
 
         col_cz_left, col_cz_right = st.columns([2, 1])
@@ -448,26 +832,20 @@ def render_main_visualizations():
             if st.session_state.highlight_climate:
                 zone = get_climate_zone_detail(st.session_state.highlight_climate)
                 if zone:
-                    st.markdown("#### 📋 气候带详情")
+                    st.markdown("#### Climate Zone Detail")
                     st.markdown(render_climate_detail(zone), unsafe_allow_html=True)
             else:
-                st.markdown("#### 📋 使用提示")
+                st.markdown("#### How to Use")
                 st.markdown("""
-                <div style="
-                    background: #f8f9fa;
-                    padding: 1rem;
-                    border-radius: 8px;
-                    border: 1px solid #dee2e6;
-                    font-size: 0.9rem;
-                ">
-                <p>从上方的下拉菜单中选择一个气候带，即可查看:</p>
-                <ul>
-                    <li>形成原因</li>
-                    <li>典型分布地区</li>
-                    <li>降水特点</li>
-                    <li>气温特点</li>
+                <div class="glass-card" style="font-size:13px; line-height:1.6;">
+                <p style="color:#1d1d1f; font-weight:600;">Select a climate zone above to view:</p>
+                <ul style="color:#86868b; padding-left:18px;">
+                    <li>Formation mechanism</li>
+                    <li>Typical distribution areas</li>
+                    <li>Precipitation characteristics</li>
+                    <li>Temperature characteristics</li>
                 </ul>
-                <p>左侧图中该气候带会被高亮显示。</p>
+                <p style="color:#aeaeb2; font-size:12px;">The selected zone will be highlighted on the map.</p>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -476,52 +854,45 @@ def render_main_visualizations():
 # 考试模式
 # ============================================================
 def render_exam_mode():
-    """渲染考试模式界面"""
-    st.markdown("---")
-    st.subheader("📝 考试模式")
+    """渲染考试模式界面 — Apple 风格"""
+    st.divider()
+    st.subheader("Exam Mode")
 
     if not st.session_state.exam_submitted:
-        st.markdown(f"""
-        <div style="
-            background: #ffeaa7;
-            padding: 10px 15px;
-            border-radius: 6px;
-            border-left: 4px solid #fdcb6e;
-            margin-bottom: 1rem;
-        ">
-            <b>考试说明:</b> 系统随机选择月份，请根据已学知识判断
-            气压带位置、风带方向、季风状态和雨带位置。
-            每题只有一个正确答案。
+        st.markdown("""
+        <div class="glass-card" style="font-size:13px; line-height:1.6; margin-bottom:1.25rem; border-left:3px solid var(--accent);">
+            <b style="color:#1d1d1f;">Instructions:</b>
+            The system randomly selects months. Based on your knowledge, determine
+            pressure belt positions, wind directions, monsoon state, and rain belt location.
+            Each question has only one correct answer.
         </div>
         """, unsafe_allow_html=True)
 
-        # 显示题目
         questions = st.session_state.exam_questions
         for i, q in enumerate(questions):
-            # 随机显示的月份信息
             month_int = int(round(q.month))
             season = get_season_name(q.month)
             decl = get_solar_declination(q.month)
-            decl_str = f"{abs(decl):.1f}°{'N' if decl >= 0 else 'S'}"
+            decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
 
             st.markdown(f"""
             <div style="
-                background: white;
+                background: var(--bg-glass);
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 padding: 12px 16px;
-                border-radius: 8px;
-                border: 1px solid #dee2e6;
+                border-radius: var(--radius-sm);
+                border: 0.5px solid var(--border);
                 margin-bottom: 0.5rem;
             ">
-                <b>第 {i+1} 题</b>
-                <span style="color:#636e72;"> | {month_int}月 ({season}) | 直射: {decl_str}</span>
+                <b style="color:#1d1d1f;">Question {i+1}</b>
+                <span style="color:#86868b;"> &middot; Month {month_int} ({season}) &middot; Decl. {decl_str}</span>
             </div>
             """, unsafe_allow_html=True)
 
             st.markdown(f"**{q.question_text}**")
 
-            # 选项 (radio button)
             answer = st.radio(
-                f"选择答案 (第{i+1}题)",
+                f"Answer for Question {i+1}",
                 options=list(range(len(q.options))),
                 format_func=lambda x, q=q: f"{chr(65+x)}. {q.options[x]}",
                 key=f"exam_q_{i}",
@@ -530,90 +901,73 @@ def render_exam_mode():
             if answer is not None:
                 st.session_state.exam_answers[i] = answer
 
-        # 提交按钮
         col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 2])
         with col_btn1:
-            if st.button("📩 提交答卷", use_container_width=True, type="primary"):
+            if st.button("Submit Answers", use_container_width=True, type="primary"):
                 if -1 in st.session_state.exam_answers:
-                    st.error("请完成所有题目后再提交!")
+                    st.error("Please complete all questions before submitting!")
                 else:
                     st.session_state.exam_submitted = True
                     st.rerun()
         with col_btn2:
-            if st.button("🔄 重新出题", use_container_width=True):
+            if st.button("New Questions", use_container_width=True):
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.rerun()
 
     else:
-        # 显示考试结果
         questions = st.session_state.exam_questions
         answers = st.session_state.exam_answers
         score, total, feedback = grade_exam(questions, answers)
 
-        # 成绩卡片
         percentage = score / total * 100
         grade_color = (
-            "#00b894" if percentage >= 80 else
-            "#fdcb6e" if percentage >= 60 else
-            "#d63031"
+            "var(--success)" if percentage >= 80 else
+            "var(--warning)" if percentage >= 60 else
+            "var(--danger)"
         )
         grade_text = (
-            "优秀 [OK]" if percentage >= 80 else
-            "良好" if percentage >= 60 else
-            "需要加强"
+            "Excellent" if percentage >= 80 else
+            "Good" if percentage >= 60 else
+            "Needs Improvement"
         )
 
         st.markdown(f"""
-        <div style="
-            background: {grade_color};
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        ">
-            <div style="font-size:3rem; font-weight:bold;">{score}/{total}</div>
-            <div style="font-size:1.2rem;">{grade_text} ({percentage:.0f}%)</div>
+        <div class="exam-score" style="margin-bottom:1.5rem;">
+            <div class="score-num" style="color:{grade_color};">{score}/{total}</div>
+            <div style="font-size:14px; color:#86868b; margin-top:4px;">{grade_text} ({percentage:.0f}%)</div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 逐题反馈
         for i, fb in enumerate(feedback):
-            icon = "✅" if fb["is_correct"] else "❌"
-            bg = "#e6fff2" if fb["is_correct"] else "#fff0f0"
-            border = "#00b894" if fb["is_correct"] else "#d63031"
+            is_ok = fb["is_correct"]
+            marker = "[OK]" if is_ok else "[X]"
+            css_class = "exam-correct" if is_ok else "exam-wrong"
+            color = "#34c759" if is_ok else "#ff3b30"
 
             correct_info = (
-                "" if fb["is_correct"]
-                else f" | 正确答案: {fb['correct_answer']}"
+                "" if is_ok
+                else f" | Correct answer: {fb['correct_answer']}"
             )
             st.markdown(f"""
-            <div style="
-                background: {bg};
-                padding: 12px 16px;
-                border-radius: 8px;
-                border-left: 4px solid {border};
-                margin-bottom: 0.8rem;
-            ">
-                <b>{icon} 第{i+1}题:</b> {fb['question']}<br>
-                <span style="color: {'#00b894' if fb['is_correct'] else '#d63031'};">
-                    你的答案: {fb['user_answer']}{correct_info}
+            <div class="{css_class}">
+                <b style="color:{color};">{marker} Q{i+1}:</b> {fb['question']}<br>
+                <span style="color:{color}; font-size:13px;">
+                    Your answer: {fb['user_answer']}{correct_info}
                 </span><br>
-                <small style="color:#636e72;">{fb['explanation']}</small>
+                <small style="color:#aeaeb2;">{fb['explanation']}</small>
             </div>
             """, unsafe_allow_html=True)
 
-        # 重新考试
         col_r1, col_r2 = st.columns(2)
         with col_r1:
-            if st.button("🔄 重新出题", use_container_width=True):
+            if st.button("New Questions", use_container_width=True):
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.session_state.exam_submitted = False
                 st.rerun()
         with col_r2:
-            if st.button("🔙 退出考试模式", use_container_width=True):
+            if st.button("Exit Exam Mode", use_container_width=True):
                 st.session_state.exam_active = False
                 st.session_state.exam_submitted = False
                 st.rerun()
@@ -623,15 +977,15 @@ def render_exam_mode():
 # 知识点面板
 # ============================================================
 def render_knowledge_panel():
-    """渲染知识总结面板 (可折叠)"""
-    with st.expander("📚 知识点总结 (点击展开)", expanded=False):
+    """渲染知识总结面板 (可折叠) — 毛玻璃风格"""
+    with st.expander("Knowledge Summary (click to expand)", expanded=False):
         month = st.session_state.month
         decl = get_solar_declination(month)
         season = get_season_name(month)
         shift = st.session_state.shift_amplitude
 
         tab1, tab2, tab3, tab4 = st.tabs([
-            "气压带风带", "三圈环流", "东亚季风", "降水与气候"
+            "Pressure & Wind", "Circulation", "Monsoon", "Precip & Climate"
         ])
 
         with tab1:
@@ -751,14 +1105,14 @@ def main():
         render_main_visualizations()
         render_knowledge_panel()
 
-    # 页脚
-    st.markdown("---")
+    # Footer
+    st.divider()
     st.markdown(
-        "<div style='text-align:center; color:#636e72; font-size:0.8rem;'>"
-        "全球大气环流与东亚季风模拟器 v1.0 | "
-        "面向高中地理教学 | "
-        "数据基于大气环流经典理论, 仅供教学演示参考 | "
-        "&copy; 2025 Educational Use"
+        "<div style='text-align:center; color:#aeaeb2; font-size:12px; letter-spacing:-0.1px;'>"
+        "Global Atmospheric Circulation &amp; East Asian Monsoon Simulator v1.0 &middot; "
+        "High School Geography Education &middot; "
+        "Based on classical atmospheric circulation theory &middot; "
+        "2025 Educational Use"
         "</div>",
         unsafe_allow_html=True,
     )
