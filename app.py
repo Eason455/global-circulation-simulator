@@ -121,9 +121,9 @@ def render_footer():
 # 主入口
 # ============================================================
 def main():
+    handle_animation()
     render_sidebar()
     render_header()
-    handle_animation()
 
     if st.session_state.exam_active:
         render_exam_mode()
