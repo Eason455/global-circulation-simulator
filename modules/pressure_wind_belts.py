@@ -30,11 +30,6 @@ def plot_pressure_wind_belts(
     """
     绘制全球气压带和风带纬度剖面图.
 
-    采用水平带状图 (纬度沿 y 轴):
-      - 气压带用彩色带状区域表示
-      - 风带用箭头表示风向
-      - 所有带随太阳直射点同步偏移
-
     Args:
         ax: matplotlib Axes
         month: 当前月份
@@ -52,25 +47,20 @@ def plot_pressure_wind_belts(
     ax.set_ylabel("纬度", fontsize=12, fontweight='bold')
     ax.set_xlabel("")
 
-    # 纬度刻度
     ticks, labels = get_lat_ticks()
     ax.set_yticks(ticks)
     ax.set_yticklabels(labels, fontsize=9)
     ax.set_xticks([])
 
-    # 网格
     ax.grid(axis='y', alpha=0.3, linestyle='--')
     ax.axhline(0, color='#636e72', linewidth=1.5, alpha=0.5)
 
-    # 绘制气压带
     if show_pressure:
         _draw_pressure_belts(ax, pressure_belts)
 
-    # 绘制风带
     if show_wind:
         _draw_wind_belts(ax, wind_belts)
 
-    # 图例
     legend_elements = []
     if show_pressure:
         from matplotlib.patches import Patch
@@ -89,7 +79,6 @@ def plot_pressure_wind_belts(
         ax.legend(handles=legend_elements, loc='lower right',
                   fontsize=8, framealpha=0.9)
 
-    # 标题
     shift_str = f"移动幅度: ±{shift_amplitude}°"
     ax.set_title(
         f"全球气压带与风带分布  ({shift_str})",
@@ -99,17 +88,14 @@ def plot_pressure_wind_belts(
 
 def _draw_pressure_belts(ax: plt.Axes, belts: List[PressureBelt]) -> None:
     """绘制气压带色块"""
-    # 按纬度排序并配对 (相邻的同类型气压带合并绘制)
     sorted_belts = sorted(belts, key=lambda b: b.base_lat, reverse=True)
 
     for belt in sorted_belts:
-        # 气压带半宽度 (低压带更窄)
         half_width = 3 if belt.is_low else 5
 
         lat_bottom = max(-90, belt.base_lat - half_width)
         lat_top = min(90, belt.base_lat + half_width)
 
-        # 绘制色带
         alpha = 0.35
         ax.fill_betweenx(
             [lat_bottom, lat_top],
@@ -119,12 +105,10 @@ def _draw_pressure_belts(ax: plt.Axes, belts: List[PressureBelt]) -> None:
             zorder=2,
         )
 
-        # 气压带边界线
         for lat in [lat_bottom, lat_top]:
             ax.axhline(lat, color=belt.color, linewidth=1,
                        alpha=0.6, linestyle='-', zorder=3)
 
-        # 标签
         mid = (lat_bottom + lat_top) / 2
         pressure_type = "低压 (L)" if belt.is_low else "高压 (H)"
         ax.text(
@@ -145,23 +129,19 @@ def _draw_wind_belts(ax: plt.Axes, wind_belts: List[WindBelt]) -> None:
         lat_mid = (wb.lat_min + wb.lat_max) / 2
         lat_span = wb.lat_max - wb.lat_min
 
-        # 风带范围
         ax.axhspan(
             wb.lat_min, wb.lat_max,
             color='#74b9ff', alpha=0.08, zorder=1
         )
 
-        # 风向箭头: 沿纬度排列多个箭头
         n_arrows = max(3, int(lat_span / 3))
         arrow_lats = np.linspace(wb.lat_min + 2, wb.lat_max - 2, n_arrows)
 
-        # 箭头方向计算
         angle_rad = np.radians(wb.arrow_angle)
         dx = np.cos(angle_rad) * 1.8
         dy = np.sin(angle_rad) * 1.2
 
         for lat_a in arrow_lats:
-            # 箭头在 x 轴方向上排列
             x_start = 2.0 + (lat_a - wb.lat_min) / lat_span * 2.0
             ax.arrow(
                 x_start - dx / 2, lat_a,
@@ -173,7 +153,6 @@ def _draw_wind_belts(ax: plt.Axes, wind_belts: List[WindBelt]) -> None:
                 length_includes_head=True,
             )
 
-        # 风带标注
         ax.text(
             8, lat_mid,
             f"{wb.name}\n({wb.direction}风)",
@@ -184,7 +163,6 @@ def _draw_wind_belts(ax: plt.Axes, wind_belts: List[WindBelt]) -> None:
             zorder=5,
         )
 
-    # 在右侧标注风带边界
     for wb in wind_belts:
         for lat in [wb.lat_min, wb.lat_max]:
             if abs(lat) < 85:
