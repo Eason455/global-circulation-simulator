@@ -26,15 +26,6 @@ def plot_climate_zones(
 ) -> None:
     """
     绘制全球气候带联动分布图.
-
-    气候带以水平色带表示, 沿纬度轴排列.
-    同时显示气压带/风带大致位置以供对照.
-
-    Args:
-        ax: matplotlib Axes
-        month: 当前月份
-        shift_amplitude: 偏移幅度
-        highlight_zone: 高亮的气候带名称 (用于交互)
     """
     decl = get_solar_declination(month)
     zones = get_climate_zones(decl, shift_amplitude)
@@ -52,12 +43,10 @@ def plot_climate_zones(
     ax.grid(axis='y', alpha=0.3, linestyle='--')
     ax.axhline(0, color='#636e72', linewidth=1.5, alpha=0.5)
 
-    # 绘制气候带色块
     for zone in zones:
         lat_min = max(-90, zone.lat_range[0])
         lat_max = min(90, zone.lat_range[1])
 
-        # 是否高亮
         is_highlighted = (highlight_zone is not None and
                          highlight_zone == zone.name)
 
@@ -74,7 +63,6 @@ def plot_climate_zones(
             zorder=3 if is_highlighted else 1,
         )
 
-        # 气候带标签
         mid = (lat_min + lat_max) / 2
         font_weight = 'bold' if is_highlighted else 'normal'
         font_size = 9 if is_highlighted else 7.5
@@ -93,11 +81,9 @@ def plot_climate_zones(
             zorder=5,
         )
 
-    # 标注气压带参考位置
     from utils.physics import get_pressure_belt_positions
     pressure_belts = get_pressure_belt_positions(decl, shift_amplitude)
     for belt in pressure_belts:
-        # 在右侧用小符号标记气压带位置
         marker = "L" if belt.is_low else "H"
         color = '#00b894' if belt.is_low else '#e17055'
         ax.plot(11.5, belt.base_lat, marker='o', color=color,
@@ -106,7 +92,6 @@ def plot_climate_zones(
                 fontsize=6, ha='left', va='center',
                 color=color, alpha=0.6)
 
-    # 图例
     ax.text(0.02, 0.98, "右侧小圆: L=低压 H=高压",
             transform=ax.transAxes, fontsize=7,
             va='top', color='#636e72')
@@ -116,15 +101,7 @@ def plot_climate_zones(
 
 
 def get_climate_zone_detail(zone_name: str) -> Optional[ClimateZone]:
-    """
-    根据气候带名称获取详细信息.
-
-    Args:
-        zone_name: 气候带中文名称
-
-    Returns:
-        ClimateZone 对象或 None
-    """
+    """根据气候带名称获取详细信息."""
     from utils.physics import CLIMATE_ZONES_BASE
     for zone in CLIMATE_ZONES_BASE:
         if zone.name == zone_name:
@@ -133,15 +110,7 @@ def get_climate_zone_detail(zone_name: str) -> Optional[ClimateZone]:
 
 
 def render_climate_detail(zone: ClimateZone) -> str:
-    """
-    将气候带详细信息渲染为 HTML 字符串 (供 Streamlit 使用).
-
-    Args:
-        zone: 气候带对象
-
-    Returns:
-        HTML 格式的详情字符串
-    """
+    """将气候带详细信息渲染为 HTML 字符串."""
     return f"""
     <div style="
         background: linear-gradient(135deg, {zone.color}22, {zone.color}44);
