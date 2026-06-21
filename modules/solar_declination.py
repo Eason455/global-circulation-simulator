@@ -51,7 +51,6 @@ def plot_solar_declination(ax: plt.Axes, month: float) -> None:
 
     for lat, label, y in [(23.5, "北回归线\n23.5°N", tropic_n),
                             (-23.5, "南回归线\n23.5°S", tropic_s)]:
-        # 在圆内绘制纬线
         radius_at_lat = np.cos(np.radians(lat))
         theta = np.linspace(0, 2 * np.pi, 100)
         x_line = radius_at_lat * np.cos(theta)
@@ -61,19 +60,18 @@ def plot_solar_declination(ax: plt.Axes, month: float) -> None:
         ax.text(1.08, y, label, fontsize=8, color='#0984e3',
                 va='center', linespacing=1.2)
 
-    # 太阳直射点 (纬度 → 圆上 y 坐标)
+    # 太阳直射点
     sun_lat_rad = np.radians(decl)
     sun_y = np.sin(sun_lat_rad)
     sun_x = 0
 
-    # 太阳光点 (发光效果)
     for radius, alpha in [(0.12, 0.3), (0.08, 0.6), (0.04, 1.0)]:
         sun_dot = Circle((sun_x, sun_y), radius,
                          facecolor='#fdcb6e', edgecolor='#e17055',
                          linewidth=1.5, alpha=alpha, zorder=5)
         ax.add_patch(sun_dot)
 
-    # 太阳光线 (从右侧射入)
+    # 太阳光线
     sun_ray_x = 1.5
     arrow = FancyArrow(sun_ray_x, sun_y + 0.3, -0.4, -0.3,
                        width=0.03, head_width=0.12, head_length=0.1,
@@ -106,7 +104,6 @@ def plot_solar_declination(ax: plt.Axes, month: float) -> None:
         zorder=6,
     )
 
-    # 季节和月份信息
     month_name = get_month_name(month)
     ax.text(0, -1.2, f"{month_name} | 直射纬度: {decl_str}",
             fontsize=13, ha='center', fontweight='bold',
