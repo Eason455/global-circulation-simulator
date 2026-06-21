@@ -2,6 +2,7 @@
 侧边栏控制面板
 ============
 Apple 毛玻璃风格, 包含月份/动画/幅度/显示/考试所有控制项.
+动画播放时滑块替换为进度指示器, 避免 Streamlit widget key 写入限制.
 """
 
 import streamlit as st
@@ -19,17 +20,18 @@ def render_sidebar() -> None:
         )
         st.caption("全球大气环流模拟器")
 
-        # ---- 月份滑块 ----
+        # ---- 月份选择 ----
         st.markdown("##### 月份选择")
-        month = st.slider(
-            "拖动选择月份",
-            min_value=0.1,
-            max_value=12.9,
-            step=0.1,
-            format="%.1f",
-            key="month",
-        )
 
+        if st.session_state.animating:
+            # 动画播放中: 显示当前月份进度条, 不显示滑块
+            _render_animating_month_display()
+        else:
+            # 手动模式: 显示滑块
+            _render_month_slider()
+
+        # 当前月份信息卡片
+        month = st.session_state.month
         decl = get_solar_declination(month)
         decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
         season = get_season_name(month)
@@ -127,3 +129,45 @@ def render_sidebar() -> None:
         PHP = 极地高压带
         </div>
         """, unsafe_allow_html=True)
+
+
+def _render_month_slider():
+    """手动模式: 显示月份滑块, 用户自由拖动."""
+    month = st.slider(
+        "拖动选择月份",
+        min_value=0.1,
+        max_value=12.9,
+        step=0.1,
+        format="%.1f",
+        key="month_slider",
+    )
+    st.session_state.month = month
+
+
+def _render_animating_month_display():
+    """动画模式: 显示当前月份进度条, 不显示滑块."""
+    month = st.session_state.month
+    month_name = get_month_name(month)
+    decl = get_solar_declination(month)
+
+    st.markdown(f"""
+    <div style="
+        background: var(--bg-glass);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: var(--radius);
+        border: 0.5px solid var(--border);
+        padding: 16px;
+        text-align: center;
+        margin-bottom: 8px;
+    ">
+        <div style="font-size:24px; font-weight:700; color:var(--accent);">{month_name}</div>
+        <div style="font-size:13px; color:var(--text-secondary);">
+            {abs(decl):.1f}°{' N' if decl >= 0 else ' S'}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 月份进度条 (1月=0%, 12月=100%)
+    progress = (month - 1) / 11
+    st.progress(progress, text="全年进度")
