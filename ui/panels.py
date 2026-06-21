@@ -17,7 +17,7 @@ from modules.climate_zones import (
     get_climate_zone_detail,
     render_climate_detail,
 )
-from utils.physics import get_solar_declination, get_month_name, get_season_name
+from utils.physics import get_solar_declination, get_month_name, get_season_name, get_monsoon_season
 
 
 def render_main_visualizations() -> None:
@@ -134,6 +134,15 @@ def render_knowledge_panel() -> None:
             """)
 
         with tab3:
+            from utils.physics import get_monsoon_state
+            monsoon = get_monsoon_state(month)
+            ms = monsoon["season"]
+            current_desc = {
+                "summer": "大陆形成热低压，东南季风盛行",
+                "winter": "大陆形成冷高压，西北季风盛行",
+                "transition": "处于季风过渡期，风向多变",
+            }.get(ms, "处于季风过渡期")
+
             st.markdown(f"""
             ### 东亚季风 — 当前状态 ({get_month_name(month)})
 
@@ -141,20 +150,23 @@ def render_knowledge_panel() -> None:
 
             亚洲大陆 (世界最大大陆) 与 太平洋 (世界最大大洋) 之间的温度差:
 
-            **夏季 ({3}-{8}月):**
+            **夏季 (5~9月):**
             - 大陆升温快 → 形成亚洲低压 (热低压)
             - 海洋升温慢 → 太平洋高压 (副热带高压)
             - 风从海洋吹向大陆 → **东南季风**
             - 带来丰沛降水 (中国东部雨季)
 
-            **冬季 ({9}-{2}月):**
+            **冬季 (11~次年2月):**
             - 大陆降温快 → 形成亚洲高压 (冷高压, 西伯利亚高压)
             - 海洋降温慢 → 太平洋低压 (阿留申低压)
             - 风从大陆吹向海洋 → **西北季风**
             - 寒冷干燥 (中国北方寒潮)
 
-            **当前状态:** 北半球{season}，
-            {'大陆形成热低压，东南季风盛行' if decl > 5 else '大陆形成冷高压，西北季风盛行' if decl < -5 else '处于季风过渡期'}
+            **过渡期 (3~4月, 10月):**
+            - 海陆热力差异减弱
+            - 季风较弱，风向多变
+
+            **当前状态:** 北半球{season}，{current_desc}
             """)
 
         with tab4:
