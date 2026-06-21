@@ -10,7 +10,6 @@
 
 import streamlit as st
 import matplotlib.pyplot as plt
-import time
 from pathlib import Path
 
 # ============================================================
@@ -89,19 +88,41 @@ init_session_state()
 # 动画循环
 # ============================================================
 def handle_animation():
-    """自动推进月份 (支持慢速/正常/快速).
-    st.session_state.month 是普通变量, 无 widget key 绑定, 可自由写入. """
-    if st.session_state.animating:
-        speeds = {"slow": 0.05, "normal": 0.12, "fast": 0.3}
-        step = speeds.get(st.session_state.anim_speed, 0.12)
+    """自动推进月份 — 基于 URL query string 的动画循环.
+    不使用 st.rerun() (那会丢弃渲染输出).
+    每帧: 页面正常渲染 → JS 定时器修改 URL → 浏览器导航 → Streamlit 重跑.
+    """
+    if not st.session_state.animating:
+        return
 
-        new_month = st.session_state.month + step
-        if new_month > 13:
-            new_month -= 12
-        st.session_state.month = new_month
+    speeds = {"slow": 0.05, "normal": 0.12, "fast": 0.3}
+    delay_ms = {"slow": 800, "normal": 500, "fast": 200}
+    step = speeds.get(st.session_state.anim_speed, 0.12)
+    dms = delay_ms.get(st.session_state.anim_speed, 500)
 
-        time.sleep(0.3)
-        st.rerun()
+    # 从 URL 读取动画月份 (由上一帧的 JS 写入)
+    qp_month = st.query_params.get("_m")
+    if qp_month:
+        try:
+            st.session_state.month = float(qp_month)
+        except ValueError:
+            pass
+
+    # 计算下一帧月份
+    new_month = st.session_state.month + step
+    if new_month > 13:
+        new_month -= 12
+
+    # 注入 JS: 页面加载后 dms 毫秒导航到下一帧
+    st.markdown(f"""
+    <script>
+    setTimeout(function() {{
+        var url = new URL(window.location);
+        url.searchParams.set('_m', '{new_month:.2f}');
+        window.location.assign(url.toString());
+    }}, {dms});
+    </script>
+    """, unsafe_allow_html=True)
 
 # ============================================================
 # 页脚
