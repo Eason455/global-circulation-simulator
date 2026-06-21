@@ -21,10 +21,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Optional
 
-# 设置中文字体 (Windows 系统优先使用微软雅黑)
+# 设置中文字体 (跨平台兼容: Windows/Linux/macOS)
 plt.rcParams['font.sans-serif'] = [
-    'Microsoft YaHei', 'SimHei', 'Noto Sans SC',
-    'STFangsong', 'KaiTi', 'DejaVu Sans'
+    'Microsoft YaHei', 'SimHei',
+    'Noto Sans CJK SC', 'Noto Sans SC',
+    'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei',
+    'PingFang SC', 'Heiti SC',
+    'STFangsong', 'KaiTi',
+    'DejaVu Sans',
 ]
 plt.rcParams['axes.unicode_minus'] = False
 
