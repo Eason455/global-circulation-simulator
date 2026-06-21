@@ -25,12 +25,10 @@ def render_sidebar() -> None:
             "拖动选择月份",
             min_value=0.1,
             max_value=12.9,
-            value=st.session_state.month,
             step=0.1,
             format="%.1f",
-            key="month_slider",
+            key="month",
         )
-        st.session_state.month = month
 
         decl = get_solar_declination(month)
         decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
