@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
-from utils.physics import get_rain_belt_position, get_solar_declination, get_lat_ticks
+from utils.physics import get_rain_belt_position, get_solar_declination, get_lat_ticks, get_monsoon_season
 
 
 def plot_rain_belt(
@@ -92,13 +92,17 @@ def plot_rain_belt(
         zorder=6,
     )
 
-    if month in [6, 7, 8]:
+    # 使用统一季节/季风判断, 支持小数月份
+    m = month % 12
+    if m == 0:
+        m = 12
+    if 6 <= m < 9:
         note = "北半球夏季: 雨带北移"
         note_color = '#d63031'
-    elif month in [12, 1, 2]:
+    elif m >= 12 or m < 3:
         note = "北半球冬季: 雨带南移"
         note_color = '#0984e3'
-    elif month in [3, 4, 5]:
+    elif 3 <= m < 6:
         note = "春季: 雨带逐渐北移"
         note_color = '#00b894'
     else:
