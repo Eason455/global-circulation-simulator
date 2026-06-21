@@ -539,13 +539,13 @@ init_session_state()
 def render_sidebar() -> None:
     """渲染侧边栏控制面板 — Apple 毛玻璃风格"""
     with st.sidebar:
-        st.markdown('<div style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:#1d1d1f;">Control Panel</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:#1d1d1f;">控制面板</div>', unsafe_allow_html=True)
         st.caption("全球大气环流模拟器")
 
         # ---- 月份滑块 ----
-        st.markdown("##### Month Selection")
+        st.markdown("##### 月份选择")
         month = st.slider(
-            "Drag to select month",
+            "拖动选择月份",
             min_value=0.1,
             max_value=12.9,
             value=st.session_state.month,
@@ -555,7 +555,6 @@ def render_sidebar() -> None:
         )
         st.session_state.month = month
 
-        # 当前月份信息卡片
         decl = get_solar_declination(month)
         decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
         season = get_season_name(month)
@@ -563,41 +562,41 @@ def render_sidebar() -> None:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Month", month_name)
+            st.metric("月份", month_name)
         with col2:
-            st.metric("Season", season)
+            st.metric("季节", season)
         with col3:
-            st.metric("Declination", decl_str)
+            st.metric("直射纬度", decl_str)
 
         st.divider()
 
         # ---- 动画控制 ----
-        st.markdown("##### Animation")
+        st.markdown("##### 动画控制")
         anim_speed = st.select_slider(
-            "Speed",
+            "速度",
             options=["slow", "normal", "fast"],
             value=st.session_state.anim_speed,
-            format_func=lambda x: {"slow": "Slow", "normal": "Normal", "fast": "Fast"}[x],
+            format_func=lambda x: {"slow": "慢速", "normal": "正常", "fast": "快速"}[x],
             key="anim_speed_select",
         )
         st.session_state.anim_speed = anim_speed
 
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("Play", use_container_width=True, type="primary"):
+            if st.button("播放动画", use_container_width=True, type="primary"):
                 st.session_state.animating = True
                 st.rerun()
         with col_b:
-            if st.button("Stop", use_container_width=True):
+            if st.button("停止", use_container_width=True):
                 st.session_state.animating = False
                 st.rerun()
 
         st.divider()
 
         # ---- 风带移动幅度 ----
-        st.markdown("##### Shift Amplitude")
+        st.markdown("##### 移动幅度")
         shift_amplitude = st.radio(
-            "Seasonal shift range of pressure/wind belts",
+            "气压带/风带季节移动幅度",
             options=[5, 10, 15],
             index=1,
             format_func=lambda x: "±" + str(x) + "°",
@@ -609,27 +608,27 @@ def render_sidebar() -> None:
         st.divider()
 
         # ---- 显示开关 ----
-        st.markdown("##### Visibility")
-        st.session_state.show_solar = st.checkbox("Solar Declination", value=True)
-        st.session_state.show_circulation = st.checkbox("Three-Cell Circulation", value=True)
-        st.session_state.show_wind = st.checkbox("Pressure & Wind Belts", value=True)
-        st.session_state.show_monsoon = st.checkbox("East Asian Monsoon", value=True)
-        st.session_state.show_rain = st.checkbox("Rain Belt (ITCZ)", value=True)
-        st.session_state.show_climate = st.checkbox("Climate Zones", value=True)
+        st.markdown("##### 显示开关")
+        st.session_state.show_solar = st.checkbox("太阳直射点", value=True)
+        st.session_state.show_circulation = st.checkbox("三圈环流", value=True)
+        st.session_state.show_wind = st.checkbox("气压带与风带", value=True)
+        st.session_state.show_monsoon = st.checkbox("东亚季风", value=True)
+        st.session_state.show_rain = st.checkbox("雨带移动 (ITCZ)", value=True)
+        st.session_state.show_climate = st.checkbox("气候带联动", value=True)
 
         st.divider()
 
         # ---- 考试模式 ----
-        st.markdown("##### Exam Mode")
+        st.markdown("##### 考试模式")
         if not st.session_state.exam_active:
-            if st.button("Start Exam", use_container_width=True, type="primary"):
+            if st.button("开始考试", use_container_width=True, type="primary"):
                 st.session_state.exam_active = True
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.session_state.exam_submitted = False
                 st.rerun()
         else:
-            if st.button("Exit Exam", use_container_width=True):
+            if st.button("退出考试", use_container_width=True):
                 st.session_state.exam_active = False
                 st.session_state.exam_submitted = False
                 st.rerun()
@@ -637,20 +636,20 @@ def render_sidebar() -> None:
         st.divider()
 
         # ---- 图例说明 ----
-        st.markdown("##### Legend")
+        st.markdown("##### 图例说明")
         st.markdown("""
         <div style="font-size:12px; color:#86868b; line-height:1.7;">
-        <b style="color:#1d1d1f;">Pressure Belts:</b><br>
-        <span style="color:#00b894;">L</span> = Low (rising, cloudy)<br>
-        <span style="color:#e17055;">H</span> = High (sinking, dry)<br><br>
-        <b style="color:#1d1d1f;">Circulation:</b><br>
-        <span style="color:#d63031;">Red</span> = Rising air<br>
-        <span style="color:#0984e3;">Blue</span> = Sinking air<br><br>
-        <b style="color:#1d1d1f;">Abbreviations:</b><br>
-        ITCZ = Equatorial Low<br>
-        STH = Subtropical High<br>
-        SPL = Subpolar Low<br>
-        PHP = Polar High
+        <b style="color:#1d1d1f;">气压带标记:</b><br>
+        <span style="color:#00b894;">L</span> = 低压 (上升气流, 多云雨)<br>
+        <span style="color:#e17055;">H</span> = 高压 (下沉气流, 晴燥)<br><br>
+        <b style="color:#1d1d1f;">环流颜色:</b><br>
+        <span style="color:#d63031;">红色</span> = 上升气流<br>
+        <span style="color:#0984e3;">蓝色</span> = 下沉气流<br><br>
+        <b style="color:#1d1d1f;">气压带缩写:</b><br>
+        ITCZ = 赤道低压带<br>
+        STH = 副热带高压带<br>
+        SPL = 副极地低压带<br>
+        PHP = 极地高压带
         </div>
         """, unsafe_allow_html=True)
 
@@ -683,11 +682,11 @@ def render_header():
     col_title, col_status = st.columns([3, 1])
 
     with col_title:
-        st.title("Global Atmospheric Circulation")
+        st.title("全球大气环流与东亚季风")
         st.markdown(
-            '<span class="caption-text">East Asian Monsoon Simulator &middot; '
-            'Interactive Geography Education Tool &middot; '
-            'Based on High School Geography Curriculum</span>',
+            '<span class="caption-text">交互式地理教学工具 &middot; '
+            '基于大气环流经典理论 &middot; '
+            '参考人教版高中地理选择性必修1</span>',
             unsafe_allow_html=True,
         )
 
@@ -700,7 +699,7 @@ def render_header():
         st.markdown(f"""
         <div class="metric-glass">
             <div class="value">{get_month_name(month)}</div>
-            <div class="label">{season} &middot; Decl. {decl_str}</div>
+            <div class="label">{season} &middot; 直射 {decl_str}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -713,7 +712,7 @@ def render_main_visualizations():
 
     # ---- 第一行: 太阳直射点 + 气压带风带 + 三圈环流 ----
     st.divider()
-    st.subheader("I. Global Atmospheric Circulation")
+    st.subheader("一、全球大气环流系统")
 
     active_panels = []
     if st.session_state.show_solar:
@@ -729,14 +728,14 @@ def render_main_visualizations():
         for col, panel in zip(cols, active_panels):
             with col:
                 if panel == "solar":
-                    st.markdown("#### Solar Declination")
+                    st.markdown("#### 太阳直射点周年运动")
                     fig, ax = plt.subplots(figsize=(5, 4.5))
                     plot_solar_declination(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
 
                 elif panel == "wind":
-                    st.markdown("#### Pressure & Wind Belts")
+                    st.markdown("#### 气压带与风带分布")
                     fig, ax = plt.subplots(figsize=(5, 5.5))
                     plot_pressure_wind_belts(
                         ax,
@@ -747,7 +746,7 @@ def render_main_visualizations():
                     plt.close(fig)
 
                 elif panel == "circulation":
-                    st.markdown("#### Three-Cell Circulation")
+                    st.markdown("#### 三圈环流")
                     fig, ax = plt.subplots(figsize=(6, 4.5))
                     plot_three_cell_circulation(
                         ax,
@@ -757,11 +756,11 @@ def render_main_visualizations():
                     st.pyplot(fig)
                     plt.close(fig)
     else:
-        st.info("Enable at least one visibility option in the sidebar.")
+        st.info("请在侧边栏开启至少一个显示选项。")
 
     # ---- 第二行: 东亚季风 + 雨带移动 ----
     st.divider()
-    st.subheader("II. East Asian Monsoon & Precipitation")
+    st.subheader("二、东亚季风与降水系统")
 
     panels_row2 = []
     if st.session_state.show_monsoon:
@@ -775,31 +774,26 @@ def render_main_visualizations():
         for col, panel in zip(cols, panels_row2):
             with col:
                 if panel == "monsoon":
-                    st.markdown("#### East Asian Monsoon")
+                    st.markdown("#### 东亚季风形成模拟")
                     fig, ax = plt.subplots(figsize=(5.5, 5))
                     plot_east_asian_monsoon(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
 
                 elif panel == "rain":
-                    st.markdown("#### Rain Belt (ITCZ)")
+                    st.markdown("#### 全球降水带 (ITCZ) 移动")
                     fig, ax = plt.subplots(figsize=(6, 3))
                     plot_rain_belt(ax, st.session_state.month)
                     st.pyplot(fig)
                     plt.close(fig)
     else:
-        st.info("Enable at least one visibility option in the sidebar.")
+        st.info("请在侧边栏开启至少一个显示选项。")
 
     # ---- 第三行: 气候带联动 ----
     if st.session_state.show_climate:
         st.divider()
-        st.subheader("III. Climate Zones & Pressure Belts")
+        st.subheader("三、全球气候带与气压带联动")
 
-        climate_names = [
-            "Tropical Rainforest", "Tropical Savanna", "Tropical Desert",
-            "Mediterranean", "Maritime Temperate", "Temperate Monsoon",
-            "Continental", "Subarctic", "Polar",
-        ]
         climate_names_cn = [
             "热带雨林气候", "热带草原气候", "热带沙漠气候",
             "地中海气候", "温带海洋性气候", "温带季风气候",
@@ -807,12 +801,12 @@ def render_main_visualizations():
         ]
 
         highlight = st.selectbox(
-            "Select a climate zone to view details (or choose 'None' to overview)",
-            ["None"] + climate_names_cn,
+            "选择气候带查看详细信息 (选择「无」可浏览全局)",
+            ["无"] + climate_names_cn,
             key="climate_selector",
         )
         st.session_state.highlight_climate = (
-            None if highlight == "None" else highlight
+            None if highlight == "无" else highlight
         )
 
         col_cz_left, col_cz_right = st.columns([2, 1])
@@ -832,20 +826,20 @@ def render_main_visualizations():
             if st.session_state.highlight_climate:
                 zone = get_climate_zone_detail(st.session_state.highlight_climate)
                 if zone:
-                    st.markdown("#### Climate Zone Detail")
+                    st.markdown("#### 气候带详情")
                     st.markdown(render_climate_detail(zone), unsafe_allow_html=True)
             else:
-                st.markdown("#### How to Use")
+                st.markdown("#### 使用提示")
                 st.markdown("""
                 <div class="glass-card" style="font-size:13px; line-height:1.6;">
-                <p style="color:#1d1d1f; font-weight:600;">Select a climate zone above to view:</p>
+                <p style="color:#1d1d1f; font-weight:600;">选择气候带即可查看：</p>
                 <ul style="color:#86868b; padding-left:18px;">
-                    <li>Formation mechanism</li>
-                    <li>Typical distribution areas</li>
-                    <li>Precipitation characteristics</li>
-                    <li>Temperature characteristics</li>
+                    <li>形成原因</li>
+                    <li>典型分布地区</li>
+                    <li>降水特点</li>
+                    <li>气温特点</li>
                 </ul>
-                <p style="color:#aeaeb2; font-size:12px;">The selected zone will be highlighted on the map.</p>
+                <p style="color:#aeaeb2; font-size:12px;">左侧图中被选中的气候带会高亮显示。</p>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -856,15 +850,15 @@ def render_main_visualizations():
 def render_exam_mode():
     """渲染考试模式界面 — Apple 风格"""
     st.divider()
-    st.subheader("Exam Mode")
+    st.subheader("考试模式")
 
     if not st.session_state.exam_submitted:
         st.markdown("""
         <div class="glass-card" style="font-size:13px; line-height:1.6; margin-bottom:1.25rem; border-left:3px solid var(--accent);">
-            <b style="color:#1d1d1f;">Instructions:</b>
-            The system randomly selects months. Based on your knowledge, determine
-            pressure belt positions, wind directions, monsoon state, and rain belt location.
-            Each question has only one correct answer.
+            <b style="color:#1d1d1f;">考试说明：</b>
+            系统随机选择月份，请根据已学知识判断
+            气压带位置、风带方向、季风状态和雨带位置。
+            每题只有一个正确答案。
         </div>
         """, unsafe_allow_html=True)
 
@@ -884,15 +878,15 @@ def render_exam_mode():
                 border: 0.5px solid var(--border);
                 margin-bottom: 0.5rem;
             ">
-                <b style="color:#1d1d1f;">Question {i+1}</b>
-                <span style="color:#86868b;"> &middot; Month {month_int} ({season}) &middot; Decl. {decl_str}</span>
+                <b style="color:#1d1d1f;">第 {i+1} 题</b>
+                <span style="color:#86868b;"> &middot; {month_int}月 ({season}) &middot; 直射 {decl_str}</span>
             </div>
             """, unsafe_allow_html=True)
 
             st.markdown(f"**{q.question_text}**")
 
             answer = st.radio(
-                f"Answer for Question {i+1}",
+                f"第 {i+1} 题答案",
                 options=list(range(len(q.options))),
                 format_func=lambda x, q=q: f"{chr(65+x)}. {q.options[x]}",
                 key=f"exam_q_{i}",
@@ -903,14 +897,14 @@ def render_exam_mode():
 
         col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 2])
         with col_btn1:
-            if st.button("Submit Answers", use_container_width=True, type="primary"):
+            if st.button("提交答卷", use_container_width=True, type="primary"):
                 if -1 in st.session_state.exam_answers:
-                    st.error("Please complete all questions before submitting!")
+                    st.error("请完成所有题目后再提交！")
                 else:
                     st.session_state.exam_submitted = True
                     st.rerun()
         with col_btn2:
-            if st.button("New Questions", use_container_width=True):
+            if st.button("重新出题", use_container_width=True):
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.rerun()
@@ -927,9 +921,9 @@ def render_exam_mode():
             "var(--danger)"
         )
         grade_text = (
-            "Excellent" if percentage >= 80 else
-            "Good" if percentage >= 60 else
-            "Needs Improvement"
+            "优秀" if percentage >= 80 else
+            "良好" if percentage >= 60 else
+            "需要加强"
         )
 
         st.markdown(f"""
@@ -947,13 +941,13 @@ def render_exam_mode():
 
             correct_info = (
                 "" if is_ok
-                else f" | Correct answer: {fb['correct_answer']}"
+                else f" | 正确答案: {fb['correct_answer']}"
             )
             st.markdown(f"""
             <div class="{css_class}">
-                <b style="color:{color};">{marker} Q{i+1}:</b> {fb['question']}<br>
+                <b style="color:{color};">{marker} 第{i+1}题:</b> {fb['question']}<br>
                 <span style="color:{color}; font-size:13px;">
-                    Your answer: {fb['user_answer']}{correct_info}
+                    你的答案: {fb['user_answer']}{correct_info}
                 </span><br>
                 <small style="color:#aeaeb2;">{fb['explanation']}</small>
             </div>
@@ -961,13 +955,13 @@ def render_exam_mode():
 
         col_r1, col_r2 = st.columns(2)
         with col_r1:
-            if st.button("New Questions", use_container_width=True):
+            if st.button("重新出题", use_container_width=True):
                 st.session_state.exam_questions = generate_questions(4)
                 st.session_state.exam_answers = [-1] * 4
                 st.session_state.exam_submitted = False
                 st.rerun()
         with col_r2:
-            if st.button("Exit Exam Mode", use_container_width=True):
+            if st.button("退出考试模式", use_container_width=True):
                 st.session_state.exam_active = False
                 st.session_state.exam_submitted = False
                 st.rerun()
@@ -978,14 +972,14 @@ def render_exam_mode():
 # ============================================================
 def render_knowledge_panel():
     """渲染知识总结面板 (可折叠) — 毛玻璃风格"""
-    with st.expander("Knowledge Summary (click to expand)", expanded=False):
+    with st.expander("知识点总结 (点击展开)", expanded=False):
         month = st.session_state.month
         decl = get_solar_declination(month)
         season = get_season_name(month)
         shift = st.session_state.shift_amplitude
 
         tab1, tab2, tab3, tab4 = st.tabs([
-            "Pressure & Wind", "Circulation", "Monsoon", "Precip & Climate"
+            "气压带风带", "三圈环流", "东亚季风", "降水与气候"
         ])
 
         with tab1:
@@ -1109,9 +1103,9 @@ def main():
     st.divider()
     st.markdown(
         "<div style='text-align:center; color:#aeaeb2; font-size:12px; letter-spacing:-0.1px;'>"
-        "Global Atmospheric Circulation &amp; East Asian Monsoon Simulator v1.0 &middot; "
-        "High School Geography Education &middot; "
-        "Based on classical atmospheric circulation theory &middot; "
+        "全球大气环流与东亚季风模拟器 v1.0 &middot; "
+        "高中地理教学可视化工具 &middot; "
+        "基于大气环流经典理论，仅供教学演示参考 &middot; "
         "2025 Educational Use"
         "</div>",
         unsafe_allow_html=True,
