@@ -152,10 +152,8 @@ def run_animation():
         # 等前端渲染
         time.sleep(delay)
 
-        # 推进月份
-        st.session_state.month += step
-        if st.session_state.month > 13:
-            st.session_state.month -= 12
+        # 推进月份 (模运算回绕, 避免边界漂移)
+        st.session_state.month = ((st.session_state.month - 1 + step) % 12) + 1
 
     # 动画结束
     st.session_state.animating = False
