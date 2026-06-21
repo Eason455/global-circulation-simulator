@@ -20,10 +20,6 @@ def plot_rain_belt(
 
     雨带跟随太阳直射点移动, 但有一定滞后 (~1 个月).
     北半球夏季雨带北移最远可达 20-25°N.
-
-    Args:
-        ax: matplotlib Axes
-        month: 当前月份
     """
     rain = get_rain_belt_position(month)
     decl = get_solar_declination(month)
@@ -38,21 +34,17 @@ def plot_rain_belt(
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_yticks([])
 
-    # 网格
     ax.grid(axis='x', alpha=0.3, linestyle='--')
     ax.axvline(0, color='#636e72', linewidth=1.5, alpha=0.5)
 
-    # 基准区域背景 (热带范围)
     ax.axvspan(-30, 30, color='#ffeaa7', alpha=0.1, zorder=0)
     ax.text(0, 9.5, "热带范围", fontsize=9, ha='center', color='#636e72', alpha=0.5)
 
-    # 雨带主体 (蓝色降水带)
     lat_center = rain["lat_center"]
     lat_min = rain["lat_min"]
     lat_max = rain["lat_max"]
     intensity = rain["intensity"]
 
-    # 多层叠加表示降水强度
     for i, (alpha, y_bottom, y_top) in enumerate([
         (0.15, 0.5, 9.5),
         (0.25, 1.0, 9.0),
@@ -64,7 +56,6 @@ def plot_rain_belt(
                    facecolor='#0984e3', alpha=alpha * intensity,
                    zorder=3)
 
-    # 降水核心区 (最深层)
     core_half = (lat_max - lat_min) * 0.3
     if core_half > 1.5:
         ax.axvspan(lat_center - core_half, lat_center + core_half,
@@ -72,16 +63,13 @@ def plot_rain_belt(
                    facecolor='#074b8a', alpha=0.5 * intensity,
                    zorder=4)
 
-    # 雨带边界线
     for lat, style in [(lat_min, '--'), (lat_max, '--')]:
         ax.axvline(lat, color='#0984e3', linewidth=1.5,
                    linestyle=style, alpha=0.7, zorder=5)
 
-    # 太阳直射点标记
     ax.axvline(decl, color='#d63031', linewidth=1.5,
                linestyle=':', alpha=0.8, zorder=5)
 
-    # 标注
     lat_center_str = f"{abs(lat_center):.1f}°{'N' if lat_center >= 0 else 'S'}"
     ax.text(
         lat_center, 8.7,
@@ -93,7 +81,6 @@ def plot_rain_belt(
         zorder=6,
     )
 
-    # 直射点标注
     decl_str = f"{abs(decl):.1f}°{'N' if decl >= 0 else 'S'}"
     ax.text(
         decl, 3.0,
@@ -105,7 +92,6 @@ def plot_rain_belt(
         zorder=6,
     )
 
-    # 季节性说明
     if month in [6, 7, 8]:
         note = "北半球夏季: 雨带北移"
         note_color = '#d63031'
