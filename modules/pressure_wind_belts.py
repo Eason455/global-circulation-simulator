@@ -155,7 +155,7 @@ def _draw_wind_belts(ax: plt.Axes, wind_belts: List[WindBelt]) -> None:
 
         ax.text(
             8, lat_mid,
-            f"{wb.name}\n({wb.direction}风)",
+            f"{wb.name}\n({wb.direction_cn}风)",
             fontsize=9, ha='center', va='center',
             fontweight='bold', color='#074b8a',
             bbox=dict(boxstyle='round,pad=0.3', facecolor='#dfe6e9',
