@@ -25,7 +25,7 @@ class ExamQuestion:
     """考试题目"""
     id: str
     month: float
-    question_type: str  # 'pressure', 'wind', 'monsoon', 'rain'
+    question_type: str
     question_text: str
     options: List[str]
     correct_index: int
@@ -33,21 +33,7 @@ class ExamQuestion:
 
 
 def generate_questions(n_questions: int = 4) -> List[ExamQuestion]:
-    """
-    生成一组随机考试题.
-
-    题型覆盖:
-      - 气压带位置判断
-      - 风带位置判断
-      - 季风方向判断
-      - 雨带位置判断
-
-    Args:
-        n_questions: 题目数量
-
-    Returns:
-        题目列表
-    """
+    """生成一组随机考试题."""
     questions = []
 
     for i in range(n_questions):
@@ -84,10 +70,7 @@ def generate_questions(n_questions: int = 4) -> List[ExamQuestion]:
 def _gen_pressure_question(month, season, decl, belts) -> ExamQuestion:
     """生成气压带相关考题"""
     decl_str = f"{abs(decl):.1f}°{'N' if decl >= 0 else 'S'}"
-
-    # 找到赤道低压带位置
     itcz = next((b for b in belts if b.name == "赤道低压带"), None)
-
     correct_lat = "约5°N-5°S" if itcz is None else f"约{abs(itcz.base_lat):.0f}°附近"
 
     return ExamQuestion(
@@ -115,7 +98,6 @@ def _gen_pressure_question(month, season, decl, belts) -> ExamQuestion:
 
 def _gen_wind_question(month, season, wind_belts) -> ExamQuestion:
     """生成风带相关考题"""
-    # 选择中纬度风带
     nh_westerlies = next(
         (w for w in wind_belts if "西风带" in w.name and w.lat_min > 10),
         None
@@ -246,16 +228,7 @@ def _gen_rain_question(month, season, rain) -> ExamQuestion:
 
 def grade_exam(questions: List[ExamQuestion],
                answers: List[int]) -> Tuple[int, int, List[Dict]]:
-    """
-    批改考卷.
-
-    Args:
-        questions: 题目列表
-        answers: 用户答案列表 (选项索引)
-
-    Returns:
-        (得分, 总分, 详细反馈列表)
-    """
+    """批改考卷."""
     total = len(questions)
     score = 0
     feedback = []
