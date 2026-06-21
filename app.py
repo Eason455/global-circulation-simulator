@@ -63,7 +63,6 @@ from ui.exam import render_exam_mode
 def init_session_state():
     """初始化 Streamlit 会话状态变量"""
     defaults = {
-        "month": 7.0,
         "anim_speed": "normal",
         "shift_amplitude": 10,
         "show_solar": True,
@@ -82,6 +81,7 @@ def init_session_state():
     for key, val in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = val
+    # month 的初始值在 handle_animation 首次调用时设定
 
 init_session_state()
 
@@ -89,7 +89,13 @@ init_session_state()
 # 动画循环
 # ============================================================
 def handle_animation():
-    """自动推进月份 (支持慢速/正常/快速)"""
+    """自动推进月份 (支持慢速/正常/快速).
+    必须在 render_sidebar() 之前调用, 以确保写入 st.session_state.month
+    时 slider widget (key='month') 尚未渲染. """
+    # 首次运行时 slider 尚未渲染, 设定默认值
+    if "month" not in st.session_state:
+        st.session_state.month = 7.0
+
     if st.session_state.animating:
         speeds = {"slow": 0.05, "normal": 0.12, "fast": 0.3}
         step = speeds.get(st.session_state.anim_speed, 0.12)
