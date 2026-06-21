@@ -122,7 +122,6 @@ def render_footer():
 # 主入口
 # ============================================================
 def main():
-    handle_animation()
     render_sidebar()
     render_header()
 
@@ -133,6 +132,7 @@ def main():
         render_knowledge_panel()
 
     render_footer()
+    handle_animation()
 
 if __name__ == "__main__":
     main()
