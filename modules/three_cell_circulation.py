@@ -105,7 +105,7 @@ def plot_three_cell_circulation(
             zorder=6,
         )
 
-    ax.text(0.02, 0.98, "↑ 红色竖线 = 上升气流 (低压区)\n↓ 蓝色竖线 = 下沉气流 (高压区)",
+    ax.text(0.02, 0.98, "↑ 红色箭头 = 上升气流 (低压区)\n↓ 蓝色箭头 = 下沉气流 (高压区)",
             transform=ax.transAxes, fontsize=8,
             va='top', ha='left',
             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
