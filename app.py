@@ -140,23 +140,24 @@ def run_animation():
 
     ph = st.empty()
 
-    for frame in range(max_frames):
-        if not st.session_state.animating:
-            break
+    try:
+        for frame in range(max_frames):
+            if not st.session_state.animating:
+                break
 
-        # 渲染当前帧到占位符
-        with ph.container():
-            render_main_visualizations()
-            render_knowledge_panel()
+            # 渲染当前帧到占位符
+            with ph.container():
+                render_main_visualizations()
+                render_knowledge_panel()
 
-        # 等前端渲染
-        time.sleep(delay)
+            # 等前端渲染
+            time.sleep(delay)
 
-        # 推进月份 (模运算回绕, 避免边界漂移)
-        st.session_state.month = ((st.session_state.month - 1 + step) % 12) + 1
-
-    # 动画结束
-    st.session_state.animating = False
+            # 推进月份 (模运算回绕, 避免边界漂移)
+            st.session_state.month = ((st.session_state.month - 1 + step) % 12) + 1
+    finally:
+        # 确保即使异常也恢复非动画状态
+        st.session_state.animating = False
 
 # ============================================================
 # 页脚
