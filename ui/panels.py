@@ -20,8 +20,13 @@ from modules.climate_zones import (
 from utils.physics import get_solar_declination, get_month_name, get_season_name, get_monsoon_season
 
 
-def render_main_visualizations() -> None:
-    """渲染三行可视化面板"""
+def render_main_visualizations(skip_widgets: bool = False) -> None:
+    """渲染三行可视化面板.
+
+    Args:
+        skip_widgets: 动画循环内设为 True, 跳过 selectbox 等交互 widget,
+                      避免 widget 创建/销毁触发 Streamlit 自动 rerun.
+    """
 
     # ---- 第一行: 太阳直射点 + 气压带风带 + 三圈环流 ----
     st.divider()
@@ -71,7 +76,7 @@ def render_main_visualizations() -> None:
 
     # ---- 第三行: 气候带联动 ----
     if st.session_state.show_climate:
-        _render_climate_panel()
+        _render_climate_panel(skip_widgets=skip_widgets)
 
 
 def render_knowledge_panel() -> None:
@@ -243,7 +248,7 @@ def _render_rain_panel() -> None:
     plt.close(fig)
 
 
-def _render_climate_panel() -> None:
+def _render_climate_panel(skip_widgets: bool = False) -> None:
     st.divider()
     st.subheader("三、全球气候带与气压带联动")
 
@@ -253,11 +258,15 @@ def _render_climate_panel() -> None:
         "温带大陆性气候", "亚寒带针叶林气候", "极地气候",
     ]
 
-    highlight = st.selectbox(
-        "选择气候带查看详细信息 (选择「无」可浏览全局)",
-        ["无"] + climate_names_cn,
-        key="climate_selector",
-    )
+    if skip_widgets:
+        # 动画中跳过交互 selectbox, 避免 widget 反复创建/销毁触发 rerun
+        highlight = "无"
+    else:
+        highlight = st.selectbox(
+            "选择气候带查看详细信息 (选择「无」可浏览全局)",
+            ["无"] + climate_names_cn,
+            key="climate_selector",
+        )
     st.session_state.highlight_climate = (
         None if highlight == "无" else highlight
     )
