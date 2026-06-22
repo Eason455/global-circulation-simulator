@@ -176,4 +176,5 @@ def _render_animating_month_display():
         progress = 1.0
     else:
         progress = raw
-    st.progress(float(progress), text="全年进度")
+    st.progress(float(progress))
+    st.caption(f"全年进度 · {((month - 1) / 11 * 100):.0f}%")
