@@ -62,11 +62,9 @@ def render_sidebar() -> None:
         with col_a:
             if st.button("播放动画", use_container_width=True, type="primary"):
                 st.session_state.animating = True
-                st.rerun()
         with col_b:
             if st.button("停止", use_container_width=True):
                 st.session_state.animating = False
-                st.rerun()
 
         st.divider()
 
