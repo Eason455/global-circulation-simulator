@@ -145,9 +145,9 @@ def run_animation():
             if not st.session_state.animating:
                 break
 
-            # 渲染当前帧到占位符
+            # 渲染当前帧到占位符 (动画中跳过交互 widget)
             with ph.container():
-                render_main_visualizations()
+                render_main_visualizations(skip_widgets=True)
                 render_knowledge_panel()
 
             # 等前端渲染
