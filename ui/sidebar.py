@@ -1,45 +1,80 @@
 """
-侧边栏控制面板
-============
-Apple 毛玻璃风格, 包含月份/动画/幅度/显示/考试所有控制项.
-动画播放时滑块替换为进度指示器, 避免 Streamlit widget key 写入限制.
+侧边栏控制面板 — 子页面导航架构
+=============================
+Radio 选择模块页面 + 全局控制 (月份/速度/幅度).
 """
-
 import streamlit as st
 from utils.physics import get_solar_declination, get_month_name, get_season_name
 from modules.exam_mode import generate_questions
 
+PAGES = [
+    "太阳直射点周年运动",
+    "气压带与风带分布",
+    "三圈环流",
+    "东亚季风形成模拟",
+    "全球降水带移动",
+    "全球气候带分布",
+    "考试模式",
+]
 
-def render_sidebar() -> None:
-    """渲染侧边栏控制面板 — Apple 毛玻璃风格"""
+
+def render_sidebar() -> str:
+    """渲染侧边栏; 返回当前选中的页面名称."""
     with st.sidebar:
         st.markdown(
             '<div style="font-size:18px;font-weight:700;letter-spacing:-0.3px;color:#1d1d1f;">'
-            '控制面板</div>',
+            '全球大气环流模拟器</div>',
             unsafe_allow_html=True,
         )
-        st.caption("全球大气环流模拟器")
+        st.caption("高中地理教学可视化工具")
 
-        # ---- 月份选择 ----
-        st.markdown("##### 月份选择")
+        st.divider()
 
+        # ---- 模块导航 ----
+        st.markdown("##### 模块导航")
+
+        # 找到当前页面在列表中的索引
+        current_idx = _get_current_page_index()
+
+        page = st.radio(
+            "选择模块",
+            options=PAGES,
+            index=current_idx,
+            label_visibility="collapsed",
+            key="page_selector",
+        )
+
+        # 考试模式自动激活/停用
+        if page == "考试模式" and not st.session_state.exam_active:
+            st.session_state.exam_active = True
+            st.session_state.exam_questions = generate_questions(4)
+            st.session_state.exam_answers = [-1] * 4
+            st.session_state.exam_submitted = False
+            st.rerun()
+        elif page != "考试模式" and st.session_state.exam_active:
+            st.session_state.exam_active = False
+            st.session_state.exam_submitted = False
+
+        st.divider()
+
+        # ---- 全局控制 ----
+        st.markdown("##### 全局控制")
+
+        # 月份
         if st.session_state.animating:
-            # 动画播放中: 显示当前月份进度条, 不显示滑块
             _render_animating_month_display()
         else:
-            # 手动模式: 显示滑块
             _render_month_slider()
 
-        # 当前月份信息卡片
+        # 月份信息卡片
         month = st.session_state.month
         decl = get_solar_declination(month)
         decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
         season = get_season_name(month)
-        month_name = get_month_name(month)
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("月份", month_name)
+            st.metric("月份", get_month_name(month))
         with col2:
             st.metric("季节", season)
         with col3:
@@ -47,8 +82,8 @@ def render_sidebar() -> None:
 
         st.divider()
 
-        # ---- 动画控制 ----
-        st.markdown("##### 动画控制")
+        # ---- 动画设置 ----
+        st.markdown("##### 动画设置")
         anim_speed = st.select_slider(
             "速度",
             options=["slow", "normal", "fast"],
@@ -58,19 +93,11 @@ def render_sidebar() -> None:
         )
         st.session_state.anim_speed = anim_speed
 
-        col_a, col_b = st.columns(2)
-        with col_a:
-            if st.button("播放动画", use_container_width=True, type="primary"):
-                st.session_state.animating = True
-        with col_b:
-            if st.button("停止", use_container_width=True):
-                st.session_state.animating = False
-
         st.divider()
 
-        # ---- 风带移动幅度 ----
+        # ---- 移动幅度 ----
         st.markdown("##### 移动幅度")
-        shift_amplitude = st.radio(
+        shift = st.radio(
             "气压带/风带季节移动幅度",
             options=[5, 10, 15],
             index=1,
@@ -78,59 +105,37 @@ def render_sidebar() -> None:
             horizontal=True,
             key="shift_radio",
         )
-        st.session_state.shift_amplitude = shift_amplitude
+        st.session_state.shift_amplitude = shift
 
         st.divider()
 
-        # ---- 显示开关 ----
-        st.markdown("##### 显示开关")
-        st.session_state.show_solar = st.checkbox("太阳直射点", value=True)
-        st.session_state.show_circulation = st.checkbox("三圈环流", value=True)
-        st.session_state.show_wind = st.checkbox("气压带与风带", value=True)
-        st.session_state.show_monsoon = st.checkbox("东亚季风", value=True)
-        st.session_state.show_rain = st.checkbox("雨带移动 (ITCZ)", value=True)
-        st.session_state.show_climate = st.checkbox("气候带联动", value=True)
-
-        st.divider()
-
-        # ---- 考试模式 ----
-        st.markdown("##### 考试模式")
-        if not st.session_state.exam_active:
-            if st.button("开始考试", use_container_width=True, type="primary"):
-                st.session_state.exam_active = True
-                st.session_state.exam_questions = generate_questions(4)
-                st.session_state.exam_answers = [-1] * 4
-                st.session_state.exam_submitted = False
-                st.rerun()
-        else:
-            if st.button("退出考试", use_container_width=True):
-                st.session_state.exam_active = False
-                st.session_state.exam_submitted = False
-                st.rerun()
-
-        st.divider()
-
-        # ---- 图例说明 ----
+        # ---- 图例 ----
         st.markdown("##### 图例说明")
         st.markdown("""
         <div style="font-size:12px; color:#86868b; line-height:1.7;">
-        <b style="color:#1d1d1f;">气压带标记:</b><br>
-        <span style="color:#00b894;">L</span> = 低压 (上升气流, 多云雨)<br>
-        <span style="color:#e17055;">H</span> = 高压 (下沉气流, 晴燥)<br><br>
-        <b style="color:#1d1d1f;">环流颜色:</b><br>
-        <span style="color:#d63031;">红色</span> = 上升气流<br>
-        <span style="color:#0984e3;">蓝色</span> = 下沉气流<br><br>
-        <b style="color:#1d1d1f;">气压带缩写:</b><br>
-        ITCZ = 赤道低压带<br>
-        STH = 副热带高压带<br>
-        SPL = 副极地低压带<br>
-        PHP = 极地高压带
+        <span style="color:#00b894;">L</span> = 低压 (上升, 多云雨)<br>
+        <span style="color:#e17055;">H</span> = 高压 (下沉, 晴燥)<br>
+        <span style="color:#d63031;">红</span> = 上升 &nbsp; <span style="color:#0984e3;">蓝</span> = 下沉<br>
+        <span style="color:#86868b;">ITCZ/STH/SPL/PHP</span>
         </div>
         """, unsafe_allow_html=True)
 
+    return page
+
+
+def _get_current_page_index() -> int:
+    """根据当前状态推断应该在导航中显示的页面索引."""
+    if st.session_state.get("exam_active"):
+        return 6  # 考试模式
+    # 尝试从之前的 page_selector 读取
+    prev = st.session_state.get("page_selector")
+    if prev in PAGES and prev != "考试模式":
+        return PAGES.index(prev)
+    return 0
+
 
 def _render_month_slider():
-    """手动模式: 显示月份滑块, 用户自由拖动."""
+    """手动模式: 月份滑块."""
     month = st.slider(
         "拖动选择月份",
         min_value=0.1,
@@ -143,30 +148,29 @@ def _render_month_slider():
 
 
 def _render_animating_month_display():
-    """动画模式: 显示当前月份进度条, 不显示滑块."""
+    """动画模式: 月份进度条 (只读)."""
     month = st.session_state.month
     month_name = get_month_name(month)
     decl = get_solar_declination(month)
 
     st.markdown(f"""
     <div style="
-        background: var(--bg-glass);
+        background: var(--bg-glass, rgba(255,255,255,0.64));
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-radius: var(--radius);
-        border: 0.5px solid var(--border);
+        border-radius: 18px;
+        border: 0.5px solid var(--border, rgba(60,60,67,0.12));
         padding: 16px;
         text-align: center;
         margin-bottom: 8px;
     ">
-        <div style="font-size:24px; font-weight:700; color:var(--accent);">{month_name}</div>
-        <div style="font-size:13px; color:var(--text-secondary);">
+        <div style="font-size:24px; font-weight:700; color:var(--accent, #0071e3);">{month_name}</div>
+        <div style="font-size:13px; color:var(--text-secondary, #86868b);">
             {abs(decl):.1f}°{' N' if decl >= 0 else ' S'}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 月份进度条 — 使用 0.1~12.9 范围映射到 0~1
     raw = (month - 1) / 11
     if raw < 0.0:
         progress = 0.0
