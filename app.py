@@ -1,17 +1,11 @@
 """
-全球气压带风带季节移动与东亚季风形成交互模拟器
-==========================================
-面向高中地理学习的动态可视化教学工具.
-
-架构: app.py (页面编排) -> ui/ (侧边栏/标题/面板/考试) -> modules/ (可视化) -> utils/ (物理模型)
+全球大气环流模拟器 — 主入口
+===========================
+子页面导航架构: 侧边栏 radio 选择模块, 主区域渲染对应页面.
 
 运行: streamlit run app.py
-
-动画方案: st.empty() 占位符 + while 循环,
-每帧更新图表, 自动推进月份, 不受 st.rerun() 丢弃输出的限制.
 """
 
-import time
 import sys
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -40,35 +34,23 @@ st.set_page_config(
 )
 
 # ============================================================
-# CSS 加载 — 多重回退策略
+# CSS 加载 — 多重回退
 # ============================================================
 def load_css():
-    """加载 Apple Design System 样式, 多重回退确保文件找到."""
+    """加载 Apple Design System 样式."""
     css_content = None
-
-    # 策略1: __file__ 相对路径
-    try:
-        css_path = Path(__file__).resolve().parent / "assets" / "style.css"
-        if css_path.exists():
-            css_content = css_path.read_text(encoding="utf-8")
-    except Exception:
-        pass
-
-    # 策略2: sys.argv[0] 相对路径
-    if css_content is None:
+    candidates = [
+        Path(__file__).resolve().parent / "assets" / "style.css",
+        Path(sys.argv[0]).resolve().parent / "assets" / "style.css",
+        Path(r"Z:\global-circulation-simulator\assets\style.css"),
+    ]
+    for css_path in candidates:
         try:
-            script_dir = Path(sys.argv[0]).resolve().parent
-            css_path = script_dir / "assets" / "style.css"
             if css_path.exists():
                 css_content = css_path.read_text(encoding="utf-8")
+                break
         except Exception:
-            pass
-
-    # 策略3: 硬编码绝对路径
-    if css_content is None:
-        hard_path = Path(r"Z:\global-circulation-simulator\assets\style.css")
-        if hard_path.exists():
-            css_content = hard_path.read_text(encoding="utf-8")
+            continue
 
     if css_content:
         st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
@@ -78,29 +60,27 @@ def load_css():
 load_css()
 
 # ============================================================
-# 导入 UI 组件
+# 导入
 # ============================================================
 from ui.sidebar import render_sidebar
 from ui.header import render_header
-from ui.panels import render_main_visualizations, render_knowledge_panel
+from ui.pages.solar import render_solar_page
+from ui.pages.pressure_wind import render_pressure_wind_page
+from ui.pages.circulation import render_circulation_page
+from ui.pages.monsoon import render_monsoon_page
+from ui.pages.rain import render_rain_page
+from ui.pages.climate import render_climate_page
 from ui.exam import render_exam_mode
 
 # ============================================================
 # 会话状态初始化
 # ============================================================
 def init_session_state():
-    """初始化 Streamlit 会话状态变量"""
+    """初始化 Streamlit 会话状态变量."""
     defaults = {
         "month": 7.0,
         "anim_speed": "normal",
         "shift_amplitude": 10,
-        "show_solar": True,
-        "show_circulation": True,
-        "show_wind": True,
-        "show_monsoon": True,
-        "show_rain": True,
-        "show_climate": True,
-        "highlight_climate": None,
         "animating": False,
         "exam_active": False,
         "exam_questions": [],
@@ -114,82 +94,35 @@ def init_session_state():
 init_session_state()
 
 # ============================================================
-# 动画循环 — 使用 st.empty() 占位符
+# 页面路由
 # ============================================================
-def run_animation():
-    """
-    在 st.empty() 占位符中循环渲染可视化面板,
-    每帧推进月份, 实现流畅动画.
-
-    这是 Streamlit 中动画的唯一可靠方案:
-    - 不使用 st.rerun() (那会丢弃渲染输出)
-    - 不使用 JS URL 导航 (浏览器闪烁, 速度不可控)
-    - while 循环内直接更新占位符, 浏览器实时接收帧
-
-    限制: 循环期间侧边栏控件不响应 (Streamlit 同步特性).
-    动画自动运行约 20 秒后停止, 或点击"停止"后等待当前帧结束.
-    """
-    speeds = {"slow": 0.05, "normal": 0.15, "fast": 0.35}
-    delays = {"slow": 0.6, "normal": 0.3, "fast": 0.1}
-
-    step = speeds.get(st.session_state.anim_speed, 0.15)
-    delay = delays.get(st.session_state.anim_speed, 0.3)
-
-    # 最大帧数: 覆盖约 12 个月 (一次完整年循环)
-    max_frames = int(12 / step) + 5
-
-    ph = st.empty()
-
-    try:
-        for frame in range(max_frames):
-            if not st.session_state.animating:
-                break
-
-            # 渲染当前帧到占位符 (动画中跳过交互 widget)
-            with ph.container():
-                render_main_visualizations(skip_widgets=True)
-                render_knowledge_panel()
-
-            # 等前端渲染
-            time.sleep(delay)
-
-            # 推进月份 (模运算回绕, 避免边界漂移)
-            st.session_state.month = ((st.session_state.month - 1 + step) % 12) + 1
-    finally:
-        # 确保即使异常也恢复非动画状态
-        st.session_state.animating = False
-
-# ============================================================
-# 页脚
-# ============================================================
-def render_footer():
-    st.divider()
-    st.markdown(
-        "<div style='text-align:center; color:#aeaeb2; font-size:12px; letter-spacing:-0.1px;'>"
-        "全球大气环流与东亚季风模拟器 v1.0 &middot; "
-        "高中地理教学可视化工具 &middot; "
-        "基于大气环流经典理论，仅供教学演示参考 &middot; "
-        "2025 Educational Use"
-        "</div>",
-        unsafe_allow_html=True,
-    )
+PAGE_MAP = {
+    "太阳直射点周年运动": render_solar_page,
+    "气压带与风带分布":    render_pressure_wind_page,
+    "三圈环流":           render_circulation_page,
+    "东亚季风形成模拟":    render_monsoon_page,
+    "全球降水带移动":      render_rain_page,
+    "全球气候带分布":      render_climate_page,
+    "考试模式":           render_exam_mode,
+}
 
 # ============================================================
 # 主入口
 # ============================================================
 def main():
-    render_sidebar()
+    page = render_sidebar()
     render_header()
 
-    if st.session_state.animating:
-        run_animation()
-    elif st.session_state.exam_active:
-        render_exam_mode()
-    else:
-        render_main_visualizations()
-        render_knowledge_panel()
+    render_func = PAGE_MAP.get(page, render_solar_page)
+    render_func()
 
-    render_footer()
+    # 页脚
+    st.divider()
+    st.caption(
+        "全球大气环流与东亚季风模拟器 · "
+        "高中地理教学可视化工具 · "
+        "基于大气环流经典理论，仅供教学演示参考"
+    )
 
 if __name__ == "__main__":
     main()
