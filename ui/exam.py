@@ -135,4 +135,5 @@ def _render_exam_results() -> None:
         if st.button("退出考试模式", use_container_width=True):
             st.session_state.exam_active = False
             st.session_state.exam_submitted = False
+            st.session_state.page_selector = "太阳直射点周年运动"
             st.rerun()
