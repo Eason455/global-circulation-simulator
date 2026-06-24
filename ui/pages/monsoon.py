@@ -6,28 +6,21 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 from modules.east_asian_monsoon import plot_east_asian_monsoon
-from utils.physics import get_solar_declination, get_month_name, get_season_name
-from utils.physics import get_monsoon_state
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from utils.physics import get_solar_declination, get_month_name, get_season_name, get_monsoon_state
+from ui.pages._base import render_animation_button
 
 
 def render_monsoon_page():
     st.subheader("东亚季风形成模拟")
-
     render_animation_button()
 
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_east_asian_monsoon,
-            figsize=(6, 5.5),
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(6, 5.5))
-        plot_east_asian_monsoon(ax, st.session_state.month)
-        st.pyplot(fig)
-        plt.close(fig)
-
     month = st.session_state.month
+
+    fig, ax = plt.subplots(figsize=(6, 5.5))
+    plot_east_asian_monsoon(ax, month)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
     decl = get_solar_declination(month)
     season = get_season_name(month)
     monsoon = get_monsoon_state(month)
