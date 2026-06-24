@@ -7,12 +7,11 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from modules.pressure_wind_belts import plot_pressure_wind_belts
 from utils.physics import get_solar_declination, get_month_name, get_season_name
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from ui.pages._base import render_animation_button
 
 
 def render_pressure_wind_page():
     st.subheader("气压带与风带分布")
-
     render_animation_button()
 
     amp = st.session_state.shift_amplitude
@@ -20,17 +19,10 @@ def render_pressure_wind_page():
     decl = get_solar_declination(month)
     season = get_season_name(month)
 
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_pressure_wind_belts,
-            figsize=(6, 6),
-            plot_kwargs={"shift_amplitude": amp},
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(6, 6))
-        plot_pressure_wind_belts(ax, month, amp)
-        st.pyplot(fig)
-        plt.close(fig)
+    fig, ax = plt.subplots(figsize=(6, 6))
+    plot_pressure_wind_belts(ax, month, amp)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
     with st.expander("知识点 — 气压带与风带", expanded=False):
         st.markdown(f"""
