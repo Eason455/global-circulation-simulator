@@ -2,31 +2,24 @@
 太阳直射点周年运动 — 子页面
 ===========================
 地球剖面图: 太阳直射点位置 + 回归线 + 赤道.
+动画由 app.py main() 统一驱动, 页面只负责渲染当前月份.
 """
 import streamlit as st
 import matplotlib.pyplot as plt
 from modules.solar_declination import plot_solar_declination
 from utils.physics import get_solar_declination, get_month_name, get_season_name
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from ui.pages._base import render_animation_button
 
 
 def render_solar_page():
     st.subheader("太阳直射点周年运动")
-
     render_animation_button()
 
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_solar_declination,
-            figsize=(5.5, 5),
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(5.5, 5))
-        plot_solar_declination(ax, st.session_state.month)
-        st.pyplot(fig)
-        plt.close(fig)
+    fig, ax = plt.subplots(figsize=(5.5, 5))
+    plot_solar_declination(ax, st.session_state.month)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
-    # 知识点
     month = st.session_state.month
     decl = get_solar_declination(month)
     decl_str = f"{abs(decl):.1f}" + ("°N" if decl >= 0 else "°S")
