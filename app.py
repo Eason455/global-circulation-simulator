@@ -2,10 +2,10 @@
 全球大气环流模拟器 — 主入口
 ===========================
 子页面导航架构: 侧边栏 radio 选择模块, 主区域渲染对应页面.
-
-运行: streamlit run app.py
+动画由 main() 统一驱动: 渲染完整页面 → sleep → st.rerun().
 """
 
+import time
 import sys
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -37,7 +37,6 @@ st.set_page_config(
 # CSS 加载 — 多重回退
 # ============================================================
 def load_css():
-    """加载 Apple Design System 样式."""
     css_content = None
     candidates = [
         Path(__file__).resolve().parent / "assets" / "style.css",
@@ -51,11 +50,8 @@ def load_css():
                 break
         except Exception:
             continue
-
     if css_content:
         st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
-    else:
-        st.warning("style.css not found — UI may not render correctly.")
 
 load_css()
 
@@ -76,7 +72,6 @@ from ui.exam import render_exam_mode
 # 会话状态初始化
 # ============================================================
 def init_session_state():
-    """初始化 Streamlit 会话状态变量."""
     defaults = {
         "month": 7.0,
         "anim_speed": "normal",
@@ -107,8 +102,11 @@ PAGE_MAP = {
 }
 
 # ============================================================
-# 主入口
+# 动画驱动
 # ============================================================
+ANIM_SPEEDS = {"slow": 0.003, "normal": 0.010, "fast": 0.030}
+ANIM_DELAYS = {"slow": 0.06, "normal": 0.03, "fast": 0.015}
+
 def main():
     page = render_sidebar()
     render_header()
@@ -123,6 +121,16 @@ def main():
         "高中地理教学可视化工具 · "
         "基于大气环流经典理论，仅供教学演示参考"
     )
+
+    # 动画: 渲染完整页面后推进月份并触发下一帧
+    if st.session_state.animating:
+        step = ANIM_SPEEDS.get(st.session_state.anim_speed, 0.010)
+        delay = ANIM_DELAYS.get(st.session_state.anim_speed, 0.03)
+        st.session_state.month += step
+        if st.session_state.month > 13:
+            st.session_state.month -= 12
+        time.sleep(delay)
+        st.rerun()
 
 if __name__ == "__main__":
     main()
