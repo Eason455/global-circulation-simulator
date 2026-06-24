@@ -11,7 +11,7 @@ from modules.climate_zones import (
     render_climate_detail,
 )
 from utils.physics import get_solar_declination, get_month_name, get_season_name
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from ui.pages._base import render_animation_button
 
 
 def render_climate_page():
@@ -23,7 +23,6 @@ def render_climate_page():
         "温带大陆性气候", "亚寒带针叶林气候", "极地气候",
     ]
 
-    # 气候带选择器 (每个页面独立的 widget key)
     highlight = st.selectbox(
         "选择气候带查看详细信息 (选择「无」浏览全局)",
         ["无"] + climate_names_cn,
@@ -36,37 +35,30 @@ def render_climate_page():
     amp = st.session_state.shift_amplitude
     month = st.session_state.month
 
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_climate_zones,
-            figsize=(8, 7),
-            plot_kwargs={"shift_amplitude": amp, "highlight_zone": highlight_zone},
-        )
-    else:
-        col_left, col_right = st.columns([2, 1])
-        with col_left:
-            fig, ax = plt.subplots(figsize=(8, 7))
-            plot_climate_zones(ax, month, amp, highlight_zone)
-            st.pyplot(fig)
-            plt.close(fig)
-        with col_right:
-            if highlight_zone:
-                zone = get_climate_zone_detail(highlight_zone)
-                if zone:
-                    st.markdown("#### 气候带详情")
-                    st.markdown(render_climate_detail(zone), unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class="glass-card" style="font-size:13px; line-height:1.6;">
-                <p style="color:#1d1d1f; font-weight:600;">选择气候带即可查看：</p>
-                <ul style="color:#86868b; padding-left:18px;">
-                    <li>形成原因</li>
-                    <li>典型分布地区</li>
-                    <li>降水特点</li>
-                    <li>气温特点</li>
-                </ul>
-                </div>
-                """, unsafe_allow_html=True)
+    col_left, col_right = st.columns([2, 1])
+    with col_left:
+        fig, ax = plt.subplots(figsize=(8, 7))
+        plot_climate_zones(ax, month, amp, highlight_zone)
+        st.pyplot(fig, use_container_width=True)
+        plt.close(fig)
+    with col_right:
+        if highlight_zone:
+            zone = get_climate_zone_detail(highlight_zone)
+            if zone:
+                st.markdown("#### 气候带详情")
+                st.markdown(render_climate_detail(zone), unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="glass-card" style="font-size:13px; line-height:1.6;">
+            <p style="color:#1d1d1f; font-weight:600;">选择气候带即可查看：</p>
+            <ul style="color:#86868b; padding-left:18px;">
+                <li>形成原因</li>
+                <li>典型分布地区</li>
+                <li>降水特点</li>
+                <li>气温特点</li>
+            </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
     decl = get_solar_declination(month)
     season = get_season_name(month)
