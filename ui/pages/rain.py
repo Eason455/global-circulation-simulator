@@ -13,7 +13,7 @@ from ui.pages._base import render_animation_button, run_single_chart_animation
 def render_rain_page():
     st.subheader("全球降水带 (ITCZ) 移动")
 
-    render_animation_button("播放动画")
+    render_animation_button()
 
     if st.session_state.animating:
         run_single_chart_animation(
