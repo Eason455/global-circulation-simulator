@@ -13,7 +13,7 @@ from ui.pages._base import render_animation_button, run_single_chart_animation
 def render_circulation_page():
     st.subheader("三圈环流")
 
-    render_animation_button("播放动画")
+    render_animation_button()
 
     amp = st.session_state.shift_amplitude
     month = st.session_state.month
