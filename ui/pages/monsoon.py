@@ -14,7 +14,7 @@ from ui.pages._base import render_animation_button, run_single_chart_animation
 def render_monsoon_page():
     st.subheader("东亚季风形成模拟")
 
-    render_animation_button("播放动画")
+    render_animation_button()
 
     if st.session_state.animating:
         run_single_chart_animation(
