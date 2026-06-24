@@ -7,28 +7,21 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from modules.rain_belt import plot_rain_belt
 from utils.physics import get_solar_declination, get_month_name, get_season_name
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from ui.pages._base import render_animation_button
 
 
 def render_rain_page():
     st.subheader("全球降水带 (ITCZ) 移动")
-
     render_animation_button()
-
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_rain_belt,
-            figsize=(9, 3.5),
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(9, 3.5))
-        plot_rain_belt(ax, st.session_state.month)
-        st.pyplot(fig)
-        plt.close(fig)
 
     month = st.session_state.month
     decl = get_solar_declination(month)
     season = get_season_name(month)
+
+    fig, ax = plt.subplots(figsize=(9, 3.5))
+    plot_rain_belt(ax, month)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
     with st.expander("知识点 — 降水带与 ITCZ", expanded=False):
         st.markdown(f"""
@@ -52,7 +45,7 @@ def render_rain_page():
 
 **口诀:** 「低压上升多云雨, 高压下沉晴燥」
 - 赤道低压带 (ITCZ) → 全年多雨
-- 副热带高压带 (STH) → 干燥沙模
+- 副热带高压带 (STH) → 干燥沙漠
 - 副极地低压带 (SPL) → 中纬度降水
 - 极地高压带 (PHP) → 极地干燥
 
