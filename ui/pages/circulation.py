@@ -7,29 +7,21 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from modules.three_cell_circulation import plot_three_cell_circulation
 from utils.physics import get_solar_declination, get_month_name
-from ui.pages._base import render_animation_button, run_single_chart_animation
+from ui.pages._base import render_animation_button
 
 
 def render_circulation_page():
     st.subheader("三圈环流")
-
     render_animation_button()
 
     amp = st.session_state.shift_amplitude
     month = st.session_state.month
     decl = get_solar_declination(month)
 
-    if st.session_state.animating:
-        run_single_chart_animation(
-            plot_fn=plot_three_cell_circulation,
-            figsize=(8, 5),
-            plot_kwargs={"shift_amplitude": amp},
-        )
-    else:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        plot_three_cell_circulation(ax, month, amp)
-        st.pyplot(fig)
-        plt.close(fig)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    plot_three_cell_circulation(ax, month, amp)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
 
     with st.expander("知识点 — 三圈环流", expanded=False):
         st.markdown(f"""
