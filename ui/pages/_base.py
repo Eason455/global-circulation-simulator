@@ -52,8 +52,8 @@ def run_single_chart_animation(plot_fn, figsize=(6, 5), plot_kwargs=None, contai
         plot_kwargs: 传给 plot_fn 的额外关键字参数 (如 shift_amplitude)
         container: Streamlit 容器 (默认创建 st.empty())
     """
-    speeds = {"slow": 0.12, "normal": 0.30, "fast": 0.60}
-    delays = {"slow": 0.40, "normal": 0.18, "fast": 0.07}
+    speeds = {"slow": 0.03, "normal": 0.06, "fast": 0.12}
+    delays = {"slow": 0.15, "normal": 0.09, "fast": 0.05}
     step = speeds.get(st.session_state.anim_speed, 0.15)
     delay = delays.get(st.session_state.anim_speed, 0.3)
     max_frames = int(12 / step) + 5
