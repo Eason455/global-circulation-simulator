@@ -28,15 +28,20 @@ def render_animation_button(label: str = "播放动画") -> bool:
     return False
 
 
-def fig_to_html_img(fig, dpi=100) -> str:
-    """matplotlib Figure → <img src='data:image/png;base64,...'> 字符串."""
+def fig_to_html_img(fig, dpi=72) -> str:
+    """matplotlib Figure → <img src='data:image/png;base64,...'> 字符串.
+    dpi=72 平衡画质与帧率."""
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight",
                 facecolor="white", edgecolor="none")
     buf.seek(0)
     b64 = base64.b64encode(buf.read()).decode()
     plt.close(fig)
-    return f'<img src="data:image/png;base64,{b64}" style="width:100%;max-width:800px;border-radius:12px;display:block;margin:0 auto;" />'
+    return (
+        '<img src="data:image/png;base64,'
+        + b64
+        + '" style="width:100%;max-width:800px;border-radius:12px;display:block;margin:0 auto;" />'
+    )
 
 
 def run_single_chart_animation(plot_fn, figsize=(6, 5), plot_kwargs=None, container=None):
