@@ -31,7 +31,7 @@ def render_climate_page():
     )
     highlight_zone = None if highlight == "无" else highlight
 
-    render_animation_button("播放动画")
+    render_animation_button()
 
     amp = st.session_state.shift_amplitude
     month = st.session_state.month
