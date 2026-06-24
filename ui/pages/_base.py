@@ -13,10 +13,15 @@ def render_animation_button():
     col_a, col_b = st.columns(2)
     with col_a:
         st.button("播放动画", use_container_width=True, type="primary",
-                  key="btn_play", on_click=lambda: setattr(st.session_state, "animating", True))
+                  key="btn_play", on_click=_start_animation)
     with col_b:
         st.button("停止", use_container_width=True,
                   key="btn_stop", on_click=_stop_animation)
+
+
+def _start_animation():
+    st.session_state.animating = True
+    st.rerun()
 
 
 def _stop_animation():
